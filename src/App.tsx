@@ -7,6 +7,7 @@ import { InputBar } from './features/input/InputBar';
 import { TaskSheet } from './features/tasks/TaskSheet';
 import { useData } from './hooks/useData';
 import { initCloud } from './lib/cloud/session';
+import { useReminders } from './lib/notify';
 import { useShortcuts } from './hooks/useShortcuts';
 import { useTheme } from './lib/theme';
 import { SettingsPage } from './pages/SettingsPage';
@@ -44,6 +45,7 @@ function Shell() {
   useEffect(() => {
     void initCloud();
   }, []);
+  useReminders(data.tasks, data.profile);
 
   const focusTask = focusTarget ? data.tasks.find((t) => t.id === focusTarget.taskId) : undefined;
 

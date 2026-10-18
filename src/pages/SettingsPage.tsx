@@ -3,6 +3,8 @@ import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { Sheet } from '../components/Sheet';
 import { Button, Card, fieldClass } from '../components/ui';
 import { AccountSection } from '../features/account/AccountSection';
+import { EmailSection } from '../features/settings/EmailSection';
+import { NotificationsSection } from '../features/settings/NotificationsSection';
 import type { PlannerData } from '../hooks/useData';
 import { buildIcs } from '../lib/calendar/ics';
 import { deleteCloudData } from '../lib/cloud/session';
@@ -73,6 +75,8 @@ export function SettingsPage({ data }: { data: PlannerData }) {
       <h1 className="text-lg font-semibold">Settings</h1>
 
       <AccountSection />
+      <NotificationsSection profile={profile} />
+      <EmailSection profile={profile} />
 
       {error && (
         <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-900 dark:bg-red-900/20 dark:text-red-100">

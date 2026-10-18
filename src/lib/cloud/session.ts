@@ -7,6 +7,7 @@ import { syncOnce } from '../sync/engine';
 import { MAPPERS } from '../sync/mappers';
 import { supabaseRemote } from '../sync/supabaseRemote';
 import { callFunction, cloudConfigured, FunctionError, getSupabase } from './client';
+import { enablePush } from './push';
 
 const SYNC_DEBOUNCE_MS = 1500;
 const SYNC_INTERVAL_MS = 60_000;
@@ -121,6 +122,11 @@ async function applySession(session: Session | null): Promise<void> {
   });
   requestSync(0);
   void refreshGoogleStatus();
+  // a device that already has reminders on also gets them while the app is closed
+  const profile = await ensureProfile();
+  if (profile.remindersEnabled && 'Notification' in window && Notification.permission === 'granted') {
+    void enablePush().catch(() => undefined);
+  }
 }
 
 export async function refreshGoogleStatus(): Promise<void> {

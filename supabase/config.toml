@@ -1,0 +1,15 @@
+# Supabase CLI configuration (used by `supabase functions deploy` and local dev).
+project_id = "dayflow"
+
+# Called by the browser with the user's session token.
+[functions.google-calendar]
+verify_jwt = true
+
+# Called by pg_cron (x-cron-secret), by the app for test emails (checked in code),
+# and by unsubscribe links in emails, which carry no token.
+[functions.daily-summary]
+verify_jwt = false
+
+# Called only by pg_cron, authenticated with x-cron-secret.
+[functions.send-reminders]
+verify_jwt = false
