@@ -2,8 +2,51 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+/*
+ * Design tokens.
+ * The shell (page, neutral cards, text) changes with the theme; the pastel "bento" cards
+ * keep the same colours in both themes and always carry near-black ink.
+ */
+:root {
+  --app-bg: #f2f0eb;
+  --app-surface: #ffffff;
+  --app-surface-2: #e9e6df;
+  --app-fg: #111111;
+  --app-muted: #5c5a55;
+  --app-line: rgb(17 17 17 / 0.08);
+  --nav-bg: #111111;
+}
+html.dark {
+  --app-bg: #0b0b0c;
+  --app-surface: #1c1c1e;
+  --app-surface-2: #2a2a2d;
+  --app-fg: #f4f4f2;
+  --app-muted: #a3a29c;
+  --app-line: rgb(255 255 255 / 0.08);
+  --nav-bg: #1f1f22;
+}
+
+@theme inline {
+  --font-sans: 'Nunito Variable', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-app: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-surface-2: var(--app-surface-2);
+  --color-fg: var(--app-fg);
+  --color-muted: var(--app-muted);
+  --color-line: var(--app-line);
+  --color-nav: var(--nav-bg);
+
+  --color-ink: #111111;
+  --color-card-lime: #b6e08c;
+  --color-card-cream: #f6eecf;
+  --color-card-sky: #93c0f8;
+  --color-card-coral: #f39a78;
+  --color-card-sun: #f7d766;
+  --color-card-mist: #ecebe8;
+  --color-card-lilac: #cdbdf6;
+
+  --radius-bento: 28px;
 }
 
 html {
@@ -15,16 +58,13 @@ html.dark {
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-app font-sans text-fg antialiased;
   margin: 0;
   overscroll-behavior-y: none;
 }
-html.dark body {
-  @apply bg-slate-950 text-slate-100;
-}
 
 :focus-visible {
-  outline: 2px solid #0d9488;
+  outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
@@ -32,7 +72,16 @@ dialog {
   color: inherit;
 }
 dialog::backdrop {
-  background: rgb(2 6 23 / 0.5);
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(2px);
+}
+
+/* hide scrollbars on horizontal chip rows, keep them scrollable */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -47,7 +96,7 @@ dialog::backdrop {
     box-shadow: 0 0 0 0 rgb(239 68 68 / 0.5);
   }
   100% {
-    box-shadow: 0 0 0 12px rgb(239 68 68 / 0);
+    box-shadow: 0 0 0 14px rgb(239 68 68 / 0);
   }
 }
 .mic-live {
@@ -63,23 +112,37 @@ dialog::backdrop {
   }
 }
 .skeleton {
-  background: linear-gradient(90deg, rgb(148 163 184 / 0.15) 25%, rgb(148 163 184 / 0.3) 37%, rgb(148 163 184 / 0.15) 63%);
+  background: linear-gradient(90deg, rgb(128 128 128 / 0.12) 25%, rgb(128 128 128 / 0.24) 37%, rgb(128 128 128 / 0.12) 63%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.35s ease-out both;
 }
 
 /* Chart roles: validated categorical slots 1-2 (dataviz reference palette) per surface. */
 :root {
   --series-1: #2a78d6;
   --series-2: #eb6834;
-  --chart-grid: #e2e8f0;
-  --chart-axis: #475569;
+  --chart-grid: #e7e5df;
+  --chart-axis: #5c5a55;
   --chart-surface: #ffffff;
 }
 html.dark {
   --series-1: #3987e5;
   --series-2: #d95926;
-  --chart-grid: #1e293b;
-  --chart-axis: #94a3b8;
-  --chart-surface: #0f172a;
+  --chart-grid: #2c2c2f;
+  --chart-axis: #a3a29c;
+  --chart-surface: #1c1c1e;
 }

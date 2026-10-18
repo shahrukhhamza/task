@@ -4,32 +4,32 @@ import { habitStreak, isScheduledOn } from '../../../supabase/functions/_shared/
 import type { Habit, HabitLog } from '../../lib/types';
 import { HabitCheck } from './HabitCheck';
 
-/** Today's habits as quick check-offs at the top of the Today view. */
+/** Today's habits as one-tap check-offs. */
 export function TodayHabits({ habits, logs, today }: { habits: Habit[]; logs: HabitLog[]; today: string }) {
   const due = habits.filter((h) => !h.archived && isScheduledOn(h, today));
   if (!due.length) return null;
   const done = new Set(logs.filter((l) => l.date === today).map((l) => l.habitId));
 
   return (
-    <section aria-label="Today’s habits" className="mb-4">
-      <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-          Habits · {done.size}/{due.length}
+    <section aria-label="Today’s habits" className="rounded-[28px] bg-surface p-4">
+      <div className="mb-3 flex items-baseline justify-between px-1">
+        <h2 className="font-bold">
+          Habits <span className="text-muted">· {done.size}/{due.length}</span>
         </h2>
-        <Link to="/habits" className="text-xs font-medium text-teal-800 hover:underline dark:text-teal-300">
-          All habits
+        <Link to="/progress" className="text-sm font-semibold text-muted hover:text-fg">
+          See all
         </Link>
       </div>
-      <ul className="flex gap-2 overflow-x-auto pb-1">
+      <ul className="grid gap-2">
         {due.map((habit) => {
           const streak = habitStreak(habit, logs, today).current;
           return (
-            <li key={habit.id} className="flex shrink-0 items-center gap-2 rounded-full bg-white py-1 pl-1 pr-3 shadow-sm dark:bg-slate-900">
-              <HabitCheck habitId={habit.id} title={habit.title} date={today} done={done.has(habit.id)} size={28} />
-              <span className="max-w-[10rem] truncate text-sm">{habit.title}</span>
+            <li key={habit.id} className="flex items-center gap-3 rounded-[20px] bg-surface-2 py-2 pl-2 pr-4">
+              <HabitCheck habitId={habit.id} title={habit.title} date={today} done={done.has(habit.id)} size={36} />
+              <span className={`flex-1 truncate font-semibold ${done.has(habit.id) ? 'text-muted line-through' : ''}`}>{habit.title}</span>
               {streak > 0 && (
-                <span className="inline-flex items-center text-xs font-semibold text-orange-700 dark:text-orange-300" aria-label={`${streak} day streak`}>
-                  <Flame size={13} aria-hidden />
+                <span className="inline-flex items-center gap-0.5 text-sm font-bold text-orange-600 dark:text-orange-300" aria-label={`${streak} day streak`}>
+                  <Flame size={15} aria-hidden />
                   {streak}
                 </span>
               )}

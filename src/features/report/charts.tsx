@@ -12,7 +12,6 @@ import {
   YAxis,
   type TooltipContentProps,
 } from 'recharts';
-import { Card } from '../../components/ui';
 
 const AXIS = { stroke: 'var(--chart-grid)', tick: { fill: 'var(--chart-axis)', fontSize: 12 }, tickLine: false };
 const GRID = <CartesianGrid stroke="var(--chart-grid)" vertical={false} />;
@@ -33,30 +32,30 @@ export function ChartCard<T>({ title, subtitle, rows, columns, children, empty }
 }) {
   const [table, setTable] = useState(false);
   return (
-    <Card className="grid gap-3">
+    <section className="grid gap-3 rounded-[28px] bg-surface p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="font-semibold">{title}</h2>
-          {subtitle && <p className="text-sm text-slate-600 dark:text-slate-400">{subtitle}</p>}
+          <h2 className="text-lg font-bold">{title}</h2>
+          {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
         </div>
         {rows.length > 0 && (
           <button
             type="button"
             aria-pressed={table}
             onClick={() => setTable(!table)}
-            className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-teal-800 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-slate-800"
+            className="shrink-0 rounded-full bg-surface-2 px-3 py-1.5 text-xs font-bold hover:brightness-95"
           >
             {table ? 'Show chart' : 'Show as table'}
           </button>
         )}
       </div>
       {rows.length === 0 ? (
-        <p className="py-8 text-center text-sm text-slate-600 dark:text-slate-400">{empty ?? 'No data for this week yet.'}</p>
+        <p className="py-8 text-center text-sm text-muted">{empty ?? 'No data for this week yet.'}</p>
       ) : table ? (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-600 dark:border-slate-700 dark:text-slate-400">
+              <tr className="border-b border-line text-left text-muted">
                 {columns.map((c) => (
                   <th key={c.label} className="py-1.5 pr-3 font-medium">
                     {c.label}
@@ -66,7 +65,7 @@ export function ChartCard<T>({ title, subtitle, rows, columns, children, empty }
             </thead>
             <tbody>
               {rows.map((row, i) => (
-                <tr key={i} className="border-b border-slate-100 dark:border-slate-800">
+                <tr key={i} className="border-b border-line">
                   {columns.map((c) => (
                     <td key={c.label} className="py-1.5 pr-3 tabular-nums">
                       {c.value(row)}
@@ -80,19 +79,19 @@ export function ChartCard<T>({ title, subtitle, rows, columns, children, empty }
       ) : (
         <div className="h-56 w-full">{children}</div>
       )}
-    </Card>
+    </section>
   );
 }
 
 function TooltipBox({ active, payload, label, format }: Partial<TooltipContentProps<number, string>> & { format: (v: number, name: string) => string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-md dark:border-slate-700 dark:bg-slate-900">
-      <p className="mb-1 font-semibold text-slate-900 dark:text-slate-100">{label}</p>
+    <div className="rounded-2xl bg-surface px-3 py-2 text-xs shadow-lg ring-1 ring-line">
+      <p className="mb-1 font-bold text-fg">{label}</p>
       {payload.map((p) => (
-        <p key={String(p.dataKey)} className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+        <p key={String(p.dataKey)} className="flex items-center gap-1.5 text-muted">
           <span className="h-2 w-2 rounded-sm" style={{ background: p.color }} aria-hidden />
-          {p.name}: <span className="font-semibold text-slate-900 dark:text-slate-100">{format(Number(p.value), String(p.name))}</span>
+          {p.name}: <span className="font-bold text-fg">{format(Number(p.value), String(p.name))}</span>
         </p>
       ))}
     </div>

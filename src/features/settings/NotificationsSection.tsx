@@ -22,7 +22,7 @@ export function NotificationsSection({ profile }: { profile: Profile }) {
         <h2 className="flex items-center gap-2 font-semibold">
           <BellOff size={18} /> Reminders
         </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">This browser can’t show notifications. On iPhone, add Dayflow to your Home Screen first.</p>
+        <p className="text-sm text-muted">This browser can’t show notifications. On iPhone, add Dayflow to your Home Screen first.</p>
       </Card>
     );
   }
@@ -59,7 +59,7 @@ export function NotificationsSection({ profile }: { profile: Profile }) {
       <h2 className="flex items-center gap-2 font-semibold">
         <Bell size={18} /> Reminders
       </h2>
-      <p className="text-sm text-slate-600 dark:text-slate-400">
+      <p className="text-sm text-muted">
         A notification shortly before each planned block.{' '}
         {background
           ? 'They arrive even when Dayflow is closed.'

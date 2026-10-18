@@ -7,10 +7,12 @@ interface SheetProps {
   title: string;
   children: ReactNode;
   wide?: boolean;
+  /** Hide the visible title (it is still announced to screen readers). */
+  bare?: boolean;
 }
 
-/** Bottom sheet on phones, centered dialog on larger screens. Uses native <dialog> for focus trapping and Esc. */
-export function Sheet({ open, onClose, title, children, wide }: SheetProps) {
+/** Bottom sheet on phones, centred dialog on larger screens. Native <dialog> gives focus trapping and Esc. */
+export function Sheet({ open, onClose, title, children, wide, bare }: SheetProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -28,17 +30,18 @@ export function Sheet({ open, onClose, title, children, wide }: SheetProps) {
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      className={`m-0 mt-auto max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl border border-slate-200 bg-white p-0 shadow-2xl sm:m-auto sm:rounded-3xl dark:border-slate-700 dark:bg-slate-900 ${wide ? 'max-w-2xl' : 'max-w-lg'}`}
+      className={`m-0 mt-auto max-h-[92dvh] w-full overflow-y-auto rounded-t-[32px] bg-surface p-0 text-fg shadow-2xl sm:m-auto sm:rounded-[32px] ${wide ? 'max-w-2xl' : 'max-w-lg'}`}
     >
       {open && (
-        <div className="p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <h2 className="text-lg font-semibold">{title}</h2>
+        <div className="px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3">
+          <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-fg/15 sm:hidden" aria-hidden />
+          <div className={`flex items-start justify-between gap-3 ${bare ? 'mb-1' : 'mb-4'}`}>
+            <h2 className={bare ? 'sr-only' : 'text-xl font-bold'}>{title}</h2>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="-mr-1 rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="-mr-1 ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-fg hover:brightness-95"
             >
               <X size={18} />
             </button>

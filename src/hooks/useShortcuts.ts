@@ -7,9 +7,9 @@ const isTyping = (el: EventTarget | null): boolean => {
   return node.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(node.tagName);
 };
 
-/** "/" focuses the input unless you're already typing; Ctrl/Cmd+K works anywhere. */
+/** "/" opens the add sheet unless you're already typing; Ctrl/Cmd+K works anywhere. */
 export function useShortcuts(): void {
-  const focusInput = useUi((s) => s.focusInput);
+  const focusInput = useUi((s) => s.openAdd);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

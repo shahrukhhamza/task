@@ -6,7 +6,7 @@ const KEY = 'dayflow-theme';
 export function applyTheme(theme: Profile['theme']): void {
   const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.classList.toggle('dark', dark);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0f172a' : '#0f766e');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0b0b0c' : '#f2f0eb');
   try {
     localStorage.setItem(KEY, theme);
   } catch {

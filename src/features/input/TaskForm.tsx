@@ -1,19 +1,21 @@
-import { X } from 'lucide-react';
-import { useId } from 'react';
+import { ChevronDown, X } from 'lucide-react';
+import { useId, useState } from 'react';
 import { fieldClass } from '../../components/ui';
-import { useCloud } from '../../store/cloud';
 import type { ParsedTask } from '../../lib/parser';
 import { endOfDayTz, fromLocalInput, MIN, toLocalInput } from '../../lib/time/tz';
 import type { Priority } from '../../lib/types';
+import { useCloud } from '../../store/cloud';
 import { describeRecurrence } from './describe';
 
 const CATEGORIES = ['general', 'study', 'work', 'fitness', 'health', 'finance', 'social', 'home', 'personal'];
 const DURATIONS = [15, 30, 45, 60, 90, 120];
 const PRIORITIES: Array<{ value: Priority; label: string }> = [
-  { value: 'high', label: 'High' },
-  { value: 'med', label: 'Medium' },
   { value: 'low', label: 'Low' },
+  { value: 'med', label: 'Normal' },
+  { value: 'high', label: 'High' },
 ];
+
+type When = 'anytime' | 'deadline' | 'fixed';
 
 interface TaskFormProps {
   value: ParsedTask;
@@ -21,29 +23,50 @@ interface TaskFormProps {
   timezone: string;
 }
 
-/** Edits one parsed task; used for the review cards and for editing saved tasks. */
+const label = 'mb-1.5 block text-sm font-semibold';
+
+function PillChoice<T extends string | number>({ options, value, onChange, name }: { options: Array<{ value: T; label: string }>; value: T | undefined; onChange: (v: T) => void; name: string }) {
+  return (
+    <div role="group" aria-label={name} className="flex flex-wrap gap-2">
+      {options.map((o) => (
+        <button
+          key={String(o.value)}
+          type="button"
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${value === o.value ? 'bg-fg text-app' : 'bg-surface-2 text-fg hover:brightness-95'}`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Edits one task: the essentials up front, everything else behind "More options". */
 export function TaskForm({ value, onChange, timezone }: TaskFormProps) {
   const id = useId();
   const calendarConnected = useCloud((s) => s.google === 'connected' && !!s.user);
-  const isFixed = value.fixedStart !== undefined;
+  const [more, setMore] = useState(false);
   const set = (patch: Partial<ParsedTask>) => onChange({ ...value, ...patch });
+  const when: When = value.fixedStart !== undefined ? 'fixed' : value.dueAt !== undefined ? 'deadline' : 'anytime';
 
-  const setKind = (fixed: boolean) => {
-    if (fixed === isFixed) return;
-    if (fixed) {
-      const start = value.dueAt ?? Date.now() + 60 * MIN;
-      const startAt = Math.ceil(start / (15 * MIN)) * 15 * MIN;
-      set({ fixedStart: startAt, fixedEnd: startAt + (value.durationMin ?? 60) * MIN, dueAt: undefined });
-    } else {
-      set({ dueAt: value.fixedStart, fixedStart: undefined, fixedEnd: undefined });
+  const setWhen = (next: When) => {
+    if (next === when) return;
+    const base = value.fixedStart ?? value.dueAt ?? Math.ceil((Date.now() + 60 * MIN) / (15 * MIN)) * 15 * MIN;
+    if (next === 'anytime') set({ fixedStart: undefined, fixedEnd: undefined, dueAt: undefined });
+    if (next === 'deadline') set({ fixedStart: undefined, fixedEnd: undefined, dueAt: endOfDayTz(base, timezone) });
+    if (next === 'fixed') {
+      const start = value.dueAt !== undefined && value.dueAt % MIN === 59_999 ? Math.ceil((Date.now() + 60 * MIN) / (15 * MIN)) * 15 * MIN : base;
+      set({ dueAt: undefined, fixedStart: start, fixedEnd: start + (value.durationMin ?? 60) * MIN });
     }
   };
 
   const setStart = (raw: string) => {
     const start = fromLocalInput(raw, timezone);
     if (start === undefined) return;
-    const length = (value.fixedEnd ?? start + 60 * MIN) - (value.fixedStart ?? start);
-    set({ fixedStart: start, fixedEnd: start + Math.max(length, 15 * MIN), durationMin: Math.round(Math.max(length, 15 * MIN) / MIN) });
+    const length = Math.max(15 * MIN, (value.fixedEnd ?? start + 60 * MIN) - (value.fixedStart ?? start));
+    set({ fixedStart: start, fixedEnd: start + length, durationMin: Math.round(length / MIN) });
   };
 
   const setEnd = (raw: string) => {
@@ -53,192 +76,142 @@ export function TaskForm({ value, onChange, timezone }: TaskFormProps) {
   };
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-5">
       <div>
-        <label htmlFor={`${id}-title`} className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
-          Title
+        <label htmlFor={`${id}-title`} className="sr-only">
+          Task
         </label>
-        <input id={`${id}-title`} className={fieldClass} value={value.title} onChange={(e) => set({ title: e.target.value })} />
+        <input
+          id={`${id}-title`}
+          className="w-full bg-transparent text-2xl font-bold text-fg placeholder:text-muted focus:outline-none"
+          value={value.title}
+          placeholder="What do you need to do?"
+          onChange={(e) => set({ title: e.target.value })}
+        />
       </div>
 
-      <div role="group" aria-label="Type" className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1 text-sm dark:bg-slate-800">
-        {[
-          { fixed: false, label: 'Flexible task' },
-          { fixed: true, label: 'Appointment' },
-        ].map((o) => (
-          <button
-            key={o.label}
-            type="button"
-            aria-pressed={isFixed === o.fixed}
-            onClick={() => setKind(o.fixed)}
-            className={`rounded-md px-3 py-1.5 font-medium ${
-              isFixed === o.fixed ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-700 dark:text-slate-300'
-            }`}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
-
-      {isFixed ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <label htmlFor={`${id}-start`} className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
+      <div>
+        <p className={label}>When</p>
+        <PillChoice
+          name="When"
+          value={when}
+          onChange={setWhen}
+          options={[
+            { value: 'anytime', label: 'Anytime' },
+            { value: 'deadline', label: 'Due by' },
+            { value: 'fixed', label: 'At a set time' },
+          ]}
+        />
+        {when === 'deadline' && (
+          <input
+            aria-label="Due by"
+            type="datetime-local"
+            className={`${fieldClass} mt-3`}
+            value={toLocalInput(value.dueAt as number, timezone)}
+            onChange={(e) => {
+              const due = fromLocalInput(e.target.value, timezone);
+              if (due !== undefined) set({ dueAt: due });
+            }}
+          />
+        )}
+        {when === 'fixed' && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="text-sm font-medium text-muted">
               Starts
+              <input type="datetime-local" className={`${fieldClass} mt-1`} value={toLocalInput(value.fixedStart as number, timezone)} onChange={(e) => setStart(e.target.value)} />
             </label>
-            <input
-              id={`${id}-start`}
-              type="datetime-local"
-              className={fieldClass}
-              value={toLocalInput(value.fixedStart as number, timezone)}
-              onChange={(e) => setStart(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor={`${id}-end`} className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
+            <label className="text-sm font-medium text-muted">
               Ends
+              <input
+                type="datetime-local"
+                className={`${fieldClass} mt-1`}
+                value={toLocalInput(value.fixedEnd ?? (value.fixedStart as number) + 60 * MIN, timezone)}
+                onChange={(e) => setEnd(e.target.value)}
+              />
             </label>
-            <input
-              id={`${id}-end`}
-              type="datetime-local"
-              className={fieldClass}
-              value={toLocalInput(value.fixedEnd ?? (value.fixedStart as number) + 60 * MIN, timezone)}
-              onChange={(e) => setEnd(e.target.value)}
-            />
           </div>
-        </div>
-      ) : (
+        )}
+        {when === 'anytime' && <p className="mt-2 text-sm text-muted">Dayflow finds the best time for it.</p>}
+      </div>
+
+      {when !== 'fixed' && (
         <div>
-          <label htmlFor={`${id}-due`} className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
-            Deadline (optional)
-          </label>
-          <div className="flex gap-2">
-            <input
-              id={`${id}-due`}
-              type="datetime-local"
-              className={fieldClass}
-              value={value.dueAt !== undefined ? toLocalInput(value.dueAt, timezone) : ''}
-              onChange={(e) => set({ dueAt: fromLocalInput(e.target.value, timezone) })}
-            />
-            {value.dueAt !== undefined && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => set({ dueAt: endOfDayTz(value.dueAt as number, timezone) })}
-                  className="shrink-0 rounded-lg px-2 text-xs font-medium text-teal-800 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-slate-800"
-                >
-                  End of day
-                </button>
-                <button
-                  type="button"
-                  aria-label="Clear deadline"
-                  onClick={() => set({ dueAt: undefined })}
-                  className="shrink-0 rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  <X size={16} />
-                </button>
-              </>
+          <p className={label}>How long</p>
+          <PillChoice
+            name="How long"
+            value={value.durationMin}
+            onChange={(d) => set({ durationMin: d })}
+            options={DURATIONS.map((d) => ({ value: d, label: d >= 60 ? `${d / 60}h` : `${d}m` }))}
+          />
+          {value.durationMin !== undefined && !DURATIONS.includes(value.durationMin) && (
+            <p className="mt-2 text-sm text-muted">Currently {value.durationMin} minutes.</p>
+          )}
+        </div>
+      )}
+
+      <div>
+        <p className={label}>Priority</p>
+        <PillChoice name="Priority" value={value.priority ?? 'med'} onChange={(p) => set({ priority: p })} options={PRIORITIES} />
+      </div>
+
+      <div>
+        <button
+          type="button"
+          aria-expanded={more}
+          onClick={() => setMore(!more)}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-fg"
+        >
+          More options <ChevronDown size={16} className={`transition ${more ? 'rotate-180' : ''}`} />
+        </button>
+
+        {more && (
+          <div className="mt-3 grid gap-4 rounded-2xl bg-surface-2/60 p-4">
+            <div>
+              <label htmlFor={`${id}-cat`} className={label}>
+                Category
+              </label>
+              <input
+                id={`${id}-cat`}
+                list={`${id}-cats`}
+                className={fieldClass}
+                value={value.category ?? 'general'}
+                onChange={(e) => set({ category: e.target.value.trim().toLowerCase() || 'general' })}
+              />
+              <datalist id={`${id}-cats`}>
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+            </div>
+            {value.recurrence && (
+              <div>
+                <span className="inline-flex items-center gap-1 rounded-full bg-card-lilac px-3 py-1.5 text-sm font-semibold text-ink">
+                  Repeats: {describeRecurrence(value.recurrence)}
+                  <button type="button" aria-label="Stop repeating" onClick={() => set({ recurrence: undefined })}>
+                    <X size={14} />
+                  </button>
+                </span>
+              </div>
+            )}
+            <label className="inline-flex items-center gap-3 text-sm font-semibold">
+              <input
+                type="checkbox"
+                checked={!!value.addToCalendar}
+                onChange={(e) => set({ addToCalendar: e.target.checked })}
+                className="h-5 w-5 accent-[var(--app-fg)]"
+              />
+              Add to Google Calendar
+            </label>
+            {value.addToCalendar && (
+              <p className="-mt-2 text-xs text-muted">
+                {calendarConnected
+                  ? 'It will appear in your Google Calendar and stay in sync.'
+                  : 'Syncs once you connect Google in Settings. Until then, open the task for a calendar link.'}
+              </p>
             )}
           </div>
-        </div>
-      )}
-
-      {!isFixed && (
-        <div>
-          <label htmlFor={`${id}-dur`} className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
-            Time needed (minutes)
-          </label>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <input
-              id={`${id}-dur`}
-              type="number"
-              min={5}
-              step={5}
-              className={`${fieldClass} !w-24`}
-              value={value.durationMin ?? ''}
-              placeholder="auto"
-              onChange={(e) => set({ durationMin: e.target.value ? Math.max(5, +e.target.value) : undefined })}
-            />
-            {DURATIONS.map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => set({ durationMin: d })}
-                aria-pressed={value.durationMin === d}
-                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                  value.durationMin === d ? 'bg-teal-700 text-white' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
-                }`}
-              >
-                {d >= 60 ? `${d / 60}h` : `${d}m`}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor={`${id}-prio`} className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
-            Priority
-          </label>
-          <select
-            id={`${id}-prio`}
-            className={fieldClass}
-            value={value.priority ?? 'med'}
-            onChange={(e) => set({ priority: e.target.value as Priority })}
-          >
-            {PRIORITIES.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor={`${id}-cat`} className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
-            Category
-          </label>
-          <input
-            id={`${id}-cat`}
-            list={`${id}-cats`}
-            className={fieldClass}
-            value={value.category ?? 'general'}
-            onChange={(e) => set({ category: e.target.value.trim().toLowerCase() || 'general' })}
-          />
-          <datalist id={`${id}-cats`}>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-        {value.recurrence && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-900 dark:bg-violet-900/40 dark:text-violet-100">
-            Repeats: {describeRecurrence(value.recurrence)}
-            <button type="button" aria-label="Remove repeat" onClick={() => set({ recurrence: undefined })}>
-              <X size={12} />
-            </button>
-          </span>
         )}
-        <label className="inline-flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={!!value.addToCalendar}
-            onChange={(e) => set({ addToCalendar: e.target.checked })}
-            className="h-4 w-4 accent-teal-700"
-          />
-          Add to Google Calendar
-        </label>
       </div>
-      {value.addToCalendar && (
-        <p className="-mt-1 text-xs text-slate-600 dark:text-slate-400">
-          {calendarConnected
-            ? 'It will appear in your Google Calendar and stay in sync.'
-            : 'Saved with the task. It syncs once you connect Google in Settings; until then, open the task for a calendar link or .ics file.'}
-        </p>
-      )}
     </div>
   );
 }

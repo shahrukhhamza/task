@@ -17,13 +17,11 @@ interface UiState {
   toast: (message: string, opts?: { undo?: Undo; tone?: Toast['tone'] }) => void;
   dismissToast: (id: number) => void;
 
-  /** Bumped to ask the input bar to take focus (the "/" and Ctrl+K shortcuts). */
-  inputFocusTick: number;
-  focusInput: () => void;
-
-  /** Text to drop into the input bar (used by the example chips in empty states). */
-  draft: { text: string; tick: number };
-  prefill: (text: string) => void;
+  /** The add sheet (opened by the + button, "/" and Ctrl+K), optionally with text already in it. */
+  addOpen: boolean;
+  addText: string;
+  openAdd: (text?: string) => void;
+  closeAdd: () => void;
 
   /** The task shown in the detail sheet. */
   selectedTaskId: string | null;
@@ -46,11 +44,10 @@ export const useUi = create<UiState>((set) => ({
   },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 
-  inputFocusTick: 0,
-  focusInput: () => set((s) => ({ inputFocusTick: s.inputFocusTick + 1 })),
-
-  draft: { text: '', tick: 0 },
-  prefill: (text) => set((s) => ({ draft: { text, tick: s.draft.tick + 1 }, inputFocusTick: s.inputFocusTick + 1 })),
+  addOpen: false,
+  addText: '',
+  openAdd: (text = '') => set({ addOpen: true, addText: text, selectedTaskId: null }),
+  closeAdd: () => set({ addOpen: false, addText: '' }),
 
   selectedTaskId: null,
   select: (selectedTaskId) => set({ selectedTaskId }),

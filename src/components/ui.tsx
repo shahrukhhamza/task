@@ -1,70 +1,152 @@
 import type { ComponentProps, ReactNode } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+// ------------------------------------------------------------------ buttons
+
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'ink';
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-teal-700 text-white hover:bg-teal-800 disabled:bg-teal-700/40',
-  secondary:
-    'bg-white text-slate-800 ring-1 ring-slate-300 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600 dark:hover:bg-slate-700',
-  ghost: 'text-slate-700 hover:bg-slate-200/70 dark:text-slate-200 dark:hover:bg-slate-800',
+  primary: 'bg-fg text-app hover:opacity-90',
+  ink: 'bg-ink text-white hover:bg-black',
+  secondary: 'bg-surface-2 text-fg hover:brightness-95 dark:hover:brightness-125',
+  ghost: 'text-fg hover:bg-surface-2',
   danger: 'bg-red-700 text-white hover:bg-red-800',
 };
 
 interface ButtonProps extends ComponentProps<'button'> {
   variant?: Variant;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export function Button({ variant = 'secondary', size = 'md', className = '', ...rest }: ButtonProps) {
-  const sizing = size === 'sm' ? 'px-2.5 py-1.5 text-xs' : 'px-3.5 py-2 text-sm';
+  const sizing = size === 'sm' ? 'h-9 px-3.5 text-sm' : size === 'lg' ? 'h-13 px-6 text-base' : 'h-11 px-5 text-[15px]';
   return (
     <button
       type="button"
       {...rest}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${sizing} ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 ${sizing} ${VARIANTS[variant]} ${className}`}
     />
   );
 }
 
-export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
+/** The black round icon button from the bento cards. */
+export function IconButton({ label, children, className = '', tone = 'ink', size = 44, ...rest }: ComponentProps<'button'> & { label: string; tone?: 'ink' | 'white' | 'soft'; size?: number }) {
+  const tones = {
+    ink: 'bg-ink text-white hover:bg-black',
+    white: 'bg-white text-ink hover:bg-white/85',
+    soft: 'bg-surface-2 text-fg hover:brightness-95 dark:hover:brightness-125',
+  };
   return (
-    <div className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 ${className}`}>
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      {...rest}
+      style={{ width: size, height: size, ...rest.style }}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 ${tones[tone]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ------------------------------------------------------------------ cards
+
+export type BentoTone = 'lime' | 'cream' | 'sky' | 'coral' | 'sun' | 'mist' | 'lilac' | 'surface';
+
+const BENTO: Record<BentoTone, string> = {
+  lime: 'bg-card-lime text-ink',
+  cream: 'bg-card-cream text-ink',
+  sky: 'bg-card-sky text-ink',
+  coral: 'bg-card-coral text-ink',
+  sun: 'bg-card-sun text-ink',
+  mist: 'bg-card-mist text-ink',
+  lilac: 'bg-card-lilac text-ink',
+  surface: 'bg-surface text-fg',
+};
+
+/** Large rounded card. Pastel tones always use dark ink, in both themes. */
+export function Bento({ tone = 'surface', className = '', children, ...rest }: ComponentProps<'div'> & { tone?: BentoTone }) {
+  return (
+    <div {...rest} className={`rounded-[28px] p-5 ${BENTO[tone]} ${className}`}>
       {children}
     </div>
   );
 }
 
+/** Neutral card (kept for older screens). */
+export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <div className={`rounded-[24px] bg-surface p-5 text-fg ${className}`}>{children}</div>;
+}
+
+/** Small uppercase-free label above a big headline, as in "Current tasks". */
+export const Kicker = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+  <p className={`text-sm font-semibold opacity-70 ${className}`}>{children}</p>
+);
+
+// ------------------------------------------------------------------ chips
+
 const TONES = {
-  neutral: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
-  teal: 'bg-teal-100 text-teal-900 dark:bg-teal-900/50 dark:text-teal-100',
-  amber: 'bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100',
-  red: 'bg-red-100 text-red-900 dark:bg-red-900/40 dark:text-red-100',
-  violet: 'bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-100',
+  neutral: 'bg-surface-2 text-fg',
+  white: 'bg-white text-ink',
+  ink: 'bg-ink text-white',
+  teal: 'bg-card-lime text-ink',
+  amber: 'bg-card-sun text-ink',
+  red: 'bg-card-coral text-ink',
+  violet: 'bg-card-lilac text-ink',
 };
 
 export function Chip({ children, tone = 'neutral', title }: { children: ReactNode; tone?: keyof typeof TONES; title?: string }) {
   return (
-    <span title={title} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${TONES[tone]}`}>
+    <span title={title} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${TONES[tone]}`}>
       {children}
     </span>
   );
 }
 
+/** Black pill with a white active segment ("Weekly | Monthly"). */
+export function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: Array<{ value: T; label: string }>; onChange: (v: T) => void; label: string }) {
+  return (
+    <div role="group" aria-label={label} className="inline-flex rounded-full bg-ink p-1">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${value === o.value ? 'bg-white text-ink' : 'text-white/80 hover:text-white'}`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Black rounded block with a big number and a small label: "24 / Nov", "9:30 / AM". */
+export function DateBlock({ top, bottom, className = '' }: { top: string; bottom: string; className?: string }) {
+  return (
+    <div className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[18px] bg-ink leading-none text-white ${className}`}>
+      <span className="text-lg font-bold">{top}</span>
+      <span className="mt-0.5 text-[11px] font-semibold opacity-80">{bottom}</span>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ misc
+
 export function EmptyState({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-200">
-        {icon}
-      </div>
-      <h3 className="text-base font-semibold">{title}</h3>
-      {children && <div className="max-w-sm text-sm text-slate-600 dark:text-slate-400">{children}</div>}
+    <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-card-lime text-ink">{icon}</div>
+      <h3 className="text-lg font-bold">{title}</h3>
+      {children && <div className="max-w-sm text-sm text-muted">{children}</div>}
     </div>
   );
 }
 
 export function Skeleton({ className = '' }: { className?: string }) {
-  return <div aria-hidden className={`skeleton rounded-xl ${className}`} />;
+  return <div aria-hidden className={`skeleton rounded-[28px] ${className}`} />;
 }
 
 export const fieldClass =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400';
+  'w-full rounded-2xl border border-line bg-surface-2 px-4 py-3 text-[15px] text-fg placeholder:text-muted focus:border-fg/30 focus:outline-none';

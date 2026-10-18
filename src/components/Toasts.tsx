@@ -1,6 +1,7 @@
 import { Undo2, X } from 'lucide-react';
 import { useUi } from '../store/ui';
 
+/** Messages float just above the bottom navigation. */
 export function Toasts() {
   const toasts = useUi((s) => s.toasts);
   const dismiss = useUi((s) => s.dismissToast);
@@ -9,16 +10,16 @@ export function Toasts() {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 top-16 z-[60] flex flex-col items-center gap-2 px-4"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] z-[60] flex flex-col items-center gap-2 px-4"
     >
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-xl px-4 py-3 text-sm shadow-lg ${
-            t.tone === 'error' ? 'bg-red-800 text-white' : 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+          className={`rise pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-full py-2.5 pl-5 pr-2 text-sm font-semibold shadow-xl ${
+            t.tone === 'error' ? 'bg-card-coral text-ink' : 'bg-ink text-white ring-1 ring-white/10'
           }`}
         >
-          <span className="flex-1">{t.message}</span>
+          <span className="flex-1 py-1">{t.message}</span>
           {t.undo && (
             <button
               type="button"
@@ -26,12 +27,12 @@ export function Toasts() {
                 dismiss(t.id);
                 await t.undo?.();
               }}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1 font-semibold underline-offset-2 hover:underline"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-ink"
             >
               <Undo2 size={14} /> Undo
             </button>
           )}
-          <button type="button" aria-label="Dismiss" onClick={() => dismiss(t.id)} className="opacity-70 hover:opacity-100">
+          <button type="button" aria-label="Dismiss" onClick={() => dismiss(t.id)} className="shrink-0 rounded-full p-1.5 opacity-70 hover:opacity-100">
             <X size={14} />
           </button>
         </div>

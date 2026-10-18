@@ -190,19 +190,19 @@ export function FocusOverlay({ task }: { task: Task }) {
   const circumference = 2 * Math.PI * radius;
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={`Focus timer for ${task.title}`} className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-8 bg-slate-950 p-6 text-white">
+    <div role="dialog" aria-modal="true" aria-label={`Focus timer for ${task.title}`} className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-8 bg-ink p-6 text-white">
       <button
         type="button"
         onClick={() => void exit()}
         aria-label="Exit focus mode"
-        className="absolute right-4 top-4 rounded-full p-2 text-slate-300 hover:bg-white/10"
+        className="absolute right-4 top-4 rounded-full p-2 text-white/75 hover:bg-white/10"
       >
         <X size={22} />
       </button>
 
       <div className="text-center">
-        <p className="text-sm uppercase tracking-widest text-teal-300">{PHASE_LABEL[phase]}</p>
-        <h2 className="mt-2 max-w-sm text-2xl font-semibold">{task.title}</h2>
+        <p className="text-sm uppercase tracking-widest text-card-lime">{PHASE_LABEL[phase]}</p>
+        <h2 className="mt-2 max-w-sm text-3xl font-bold">{task.title}</h2>
       </div>
 
       <div className="relative flex h-72 w-72 items-center justify-center">
@@ -213,27 +213,27 @@ export function FocusOverlay({ task }: { task: Task }) {
             cy="140"
             r={radius}
             fill="none"
-            stroke={phase === 'focus' ? '#2dd4bf' : '#fbbf24'}
+            stroke={phase === 'focus' ? '#b6e08c' : '#f7d766'}
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={circumference * (1 - Math.min(1, Math.max(0, progress)))}
           />
         </svg>
-        <span role="timer" aria-live="off" className="text-6xl font-light tabular-nums tracking-tight">
+        <span role="timer" aria-live="off" className="text-7xl font-bold tabular-nums tracking-tight">
           {mmss(remaining)}
         </span>
       </div>
 
       <div className="flex items-center gap-3">
-        <button type="button" onClick={reset} aria-label="Reset timer" className="rounded-full p-3 text-slate-300 hover:bg-white/10">
+        <button type="button" onClick={reset} aria-label="Reset timer" className="rounded-full p-3 text-white/75 hover:bg-white/10">
           <RotateCcw size={22} />
         </button>
         <button
           type="button"
           onClick={() => void toggle()}
           aria-label={running ? 'Pause' : 'Start'}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-500 text-slate-950 hover:bg-teal-400"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-card-lime text-ink hover:brightness-105"
         >
           {running ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
         </button>
@@ -241,16 +241,16 @@ export function FocusOverlay({ task }: { task: Task }) {
           type="button"
           onClick={() => void finishTask()}
           aria-label="Mark task done"
-          className="rounded-full p-3 text-slate-300 hover:bg-white/10"
+          className="rounded-full p-3 text-white/75 hover:bg-white/10"
         >
           <Check size={22} />
         </button>
       </div>
 
-      <div className="flex flex-col items-center gap-3 text-sm text-slate-300">
+      <div className="flex flex-col items-center gap-3 text-sm text-white/75">
         <div className="flex gap-1.5" aria-label={`${cycle} focus sessions completed`}>
           {[0, 1, 2, 3].map((i) => (
-            <span key={i} className={`h-2 w-2 rounded-full ${i < cycle % 4 || (cycle > 0 && cycle % 4 === 0) ? 'bg-teal-400' : 'bg-white/20'}`} />
+            <span key={i} className={`h-2 w-2 rounded-full ${i < cycle % 4 || (cycle > 0 && cycle % 4 === 0) ? 'bg-card-lime' : 'bg-white/20'}`} />
           ))}
         </div>
         <div className="flex gap-2" role="group" aria-label="Interval length">
@@ -260,13 +260,13 @@ export function FocusOverlay({ task }: { task: Task }) {
               type="button"
               aria-pressed={preset === key}
               onClick={() => changePreset(key)}
-              className={`rounded-full px-3 py-1 ${preset === key ? 'bg-white/20 text-white' : 'text-slate-300 hover:bg-white/10'}`}
+              className={`rounded-full px-3 py-1 ${preset === key ? 'bg-white/20 text-white' : 'text-white/75 hover:bg-white/10'}`}
             >
               {PRESETS[key].label}
             </button>
           ))}
         </div>
-        <p className="text-xs text-slate-400">Space to start or pause · Esc to leave</p>
+        <p className="text-xs text-white/60">Space to start or pause · Esc to leave</p>
       </div>
       <span className="sr-only" role="status" aria-live="polite">
         {announce}

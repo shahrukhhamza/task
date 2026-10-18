@@ -41,7 +41,7 @@ export function AccountSection() {
         <h2 className="flex items-center gap-2 font-semibold">
           <CloudOff size={18} /> Account & sync
         </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-sm text-muted">
           Dayflow is running fully on this device. Sign-in, sync across devices, Google Calendar and email summaries switch on once the
           Supabase keys are added (see the README).
         </p>
@@ -52,7 +52,7 @@ export function AccountSection() {
   if (!cloud.ready) {
     return (
       <Card>
-        <p className="text-sm text-slate-600 dark:text-slate-400">Checking your account…</p>
+        <p className="text-sm text-muted">Checking your account…</p>
       </Card>
     );
   }
@@ -61,7 +61,7 @@ export function AccountSection() {
     return (
       <Card className="grid gap-3">
         <h2 className="font-semibold">Account & sync</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-sm text-muted">
           Sign in to back up your plan, use it on all your devices, connect Google Calendar and get a nightly summary by email. Everything
           already on this device is uploaded when you sign in.
         </p>
@@ -79,20 +79,20 @@ export function AccountSection() {
         {cloud.user.avatarUrl ? (
           <img src={cloud.user.avatarUrl} alt="" className="h-10 w-10 rounded-full" referrerPolicy="no-referrer" />
         ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-700 font-semibold text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-card-lime font-bold text-ink">
             {(cloud.user.name ?? cloud.user.email).slice(0, 1).toUpperCase()}
           </div>
         )}
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{cloud.user.name ?? cloud.user.email}</p>
-          <p className="truncate text-sm text-slate-600 dark:text-slate-400">{cloud.user.email}</p>
+          <p className="truncate text-sm text-muted">{cloud.user.email}</p>
         </div>
         <Button size="sm" variant="ghost" onClick={() => run('signout', signOut, 'Signed out. Your data stays on this device.')}>
           <LogOut size={15} /> Sign out
         </Button>
       </div>
 
-      <div className="grid gap-1.5 rounded-xl bg-slate-50 p-3 text-sm dark:bg-slate-800/60">
+      <div className="grid gap-1.5 rounded-xl bg-surface-2 p-4 text-sm">
         <div className="flex items-center justify-between gap-2">
           <span className="font-medium">Sync</span>
           {cloud.syncStatus === 'error' ? (
@@ -105,7 +105,7 @@ export function AccountSection() {
             <Chip tone="teal">Up to date</Chip>
           )}
         </div>
-        <p className="text-slate-600 dark:text-slate-400">
+        <p className="text-muted">
           Last synced {ago(cloud.lastSyncedAt)}
           {pending ? ` · ${pending} change${pending === 1 ? '' : 's'} waiting` : ''}
         </p>
@@ -117,7 +117,7 @@ export function AccountSection() {
         </div>
       </div>
 
-      <div className="grid gap-1.5 rounded-xl bg-slate-50 p-3 text-sm dark:bg-slate-800/60">
+      <div className="grid gap-1.5 rounded-xl bg-surface-2 p-4 text-sm">
         <div className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-1.5 font-medium">
             <CalendarCheck size={15} /> Google Calendar
@@ -136,7 +136,7 @@ export function AccountSection() {
         </div>
         {google === 'connected' && (
           <>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-muted">
               Your events block time in the plan, and tasks you add to the calendar stay in sync. Last import {ago(cloud.lastImportAt)}.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -151,7 +151,7 @@ export function AccountSection() {
         )}
         {(google === 'reconnect' || google === 'disconnected' || google === 'error') && (
           <>
-            <p className="flex items-start gap-1.5 text-slate-700 dark:text-slate-300">
+            <p className="flex items-start gap-1.5 text-muted">
               {google !== 'disconnected' && <TriangleAlert size={15} className="mt-0.5 shrink-0" />}
               {google === 'reconnect'
                 ? 'Google access has expired (this happens every 7 days while the Google app is in testing). Reconnect to keep syncing.'

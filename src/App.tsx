@@ -1,33 +1,25 @@
-import { BarChart3, CalendarDays, Repeat, Settings, Sun, WifiOff } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BottomNav } from './components/BottomNav';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toasts } from './components/Toasts';
 import { Skeleton } from './components/ui';
 import { FocusOverlay } from './features/focus/FocusOverlay';
-import { InputBar } from './features/input/InputBar';
+import { AddSheet } from './features/input/AddSheet';
 import { TaskSheet } from './features/tasks/TaskSheet';
 import { useData } from './hooks/useData';
+import { useShortcuts } from './hooks/useShortcuts';
 import { initCloud } from './lib/cloud/session';
 import { useReminders } from './lib/notify';
-import { useShortcuts } from './hooks/useShortcuts';
 import { useTheme } from './lib/theme';
 import { TodayPage } from './pages/TodayPage';
 import { useUi } from './store/ui';
 
-// Today loads with the app; the rest (charts in particular) load when first opened
-const UpcomingPage = lazy(() => import('./pages/UpcomingPage').then((m) => ({ default: m.UpcomingPage })));
-const HabitsPage = lazy(() => import('./pages/HabitsPage').then((m) => ({ default: m.HabitsPage })));
-const ReportPage = lazy(() => import('./pages/ReportPage'));
+// Today loads with the app; the other tabs (charts in particular) load when first opened
+const CalendarPage = lazy(() => import('./pages/CalendarPage'));
+const ProgressPage = lazy(() => import('./pages/ProgressPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
-
-const NAV = [
-  { to: '/', label: 'Today', icon: Sun },
-  { to: '/upcoming', label: 'Upcoming', icon: CalendarDays },
-  { to: '/habits', label: 'Habits', icon: Repeat },
-  { to: '/report', label: 'Report', icon: BarChart3 },
-  { to: '/settings', label: 'Settings', icon: Settings },
-];
 
 function useOnline(): boolean {
   const [online, setOnline] = useState(() => navigator.onLine);
@@ -59,61 +51,38 @@ function Shell() {
 
   return (
     <>
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-slate-900"
-      >
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-full focus:bg-surface focus:px-4 focus:py-2">
         Skip to content
       </a>
 
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-slate-50/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-2.5">
-          <div className="flex items-center gap-2 font-semibold tracking-tight">
-            <img src="/favicon.svg" alt="" className="h-6 w-6" />
-            Dayflow
-            {!online && (
-              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-                <WifiOff size={12} /> Offline
-              </span>
-            )}
-          </div>
-          <nav aria-label="Main" className="flex gap-1">
-            {NAV.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end
-                className={({ isActive }) =>
-                  `inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium ${
-                    isActive ? 'bg-teal-700 text-white' : 'text-slate-700 hover:bg-slate-200/70 dark:text-slate-300 dark:hover:bg-slate-800'
-                  }`
-                }
-              >
-                <Icon size={16} />
-                <span className="hidden md:inline">{label}</span>
-                <span className="sr-only md:hidden">{label}</span>
-              </NavLink>
-            ))}
-          </nav>
+      {!online && (
+        <div className="fixed inset-x-0 top-0 z-50 flex justify-center pt-[max(0.5rem,env(safe-area-inset-top))]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white shadow-lg">
+            <WifiOff size={13} /> Offline · everything still works
+          </span>
         </div>
-      </header>
+      )}
 
-      <main id="main" className="mx-auto max-w-3xl px-4 pb-80 pt-4">
+      <main id="main" className="mx-auto w-full max-w-xl px-4 pb-36 pt-[max(1.25rem,env(safe-area-inset-top))] lg:max-w-5xl">
         <ErrorBoundary>
           <Suspense fallback={<Skeleton className="h-96" />}>
             <Routes>
               <Route path="/" element={<TodayPage data={data} />} />
-              <Route path="/upcoming" element={<UpcomingPage data={data} />} />
-              <Route path="/habits" element={<HabitsPage data={data} />} />
-              <Route path="/report" element={<ReportPage data={data} />} />
+              <Route path="/calendar" element={<CalendarPage data={data} />} />
+              <Route path="/progress" element={<ProgressPage data={data} />} />
               <Route path="/settings" element={<SettingsPage data={data} />} />
-              <Route path="*" element={<TodayPage data={data} />} />
+              {/* older links (emails, bookmarks) */}
+              <Route path="/upcoming" element={<Navigate to="/calendar" replace />} />
+              <Route path="/report" element={<Navigate to="/progress" replace />} />
+              <Route path="/habits" element={<Navigate to="/progress" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>
       </main>
 
-      <InputBar profile={data.profile} now={data.now} />
+      <BottomNav />
+      <AddSheet profile={data.profile} now={data.now} />
       <TaskSheet tasks={data.tasks} profile={data.profile} now={data.now} risks={data.livePlan.risks} />
       {focusTask && <FocusOverlay key={focusTask.id} task={focusTask} />}
       <Toasts />

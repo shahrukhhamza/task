@@ -24,8 +24,8 @@ export default defineConfig({
         name: 'Dayflow',
         short_name: 'Dayflow',
         description: 'Voice + text AI daily planner and companion',
-        theme_color: '#0f766e',
-        background_color: '#0f172a',
+        theme_color: '#111111',
+        background_color: '#0b0b0c',
         display: 'standalone',
         start_url: '/',
         icons: [

@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, Pencil, RotateCcw, SkipForward, Timer, Trash2 } from 'lucide-react';
+import { Check, Clock, Pencil, Play, RotateCcw, SkipForward, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Sheet } from '../../components/Sheet';
 import { Button, Chip } from '../../components/ui';
@@ -25,6 +25,8 @@ const toDraft = (t: Task): ParsedTask => ({
   addToCalendar: t.addToCalendar,
 });
 
+const PRIORITY = { high: 'High priority', med: 'Normal priority', low: 'Low priority' } as const;
+
 interface TaskSheetProps {
   tasks: Task[];
   profile: Profile;
@@ -32,7 +34,7 @@ interface TaskSheetProps {
   risks: Risk[];
 }
 
-/** Details and actions for one task, opened by tapping a block anywhere in the app. */
+/** Details and actions for one task: the two common actions are big, the rest small. */
 export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
   const selectedId = useUi((s) => s.selectedTaskId);
   const select = useUi((s) => s.select);
@@ -55,11 +57,12 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
   const risk = task && risks.find((r) => r.taskId === task.id);
   const learned = task && task.fixedStart === undefined && task.status !== 'done' ? adjustEstimate(task.estimateMin, task.category, statsFromTasks(tasks)) : undefined;
   const when = task && describeWhen(task, tz, now);
+  const nextBlock = task?.blocks.slice().sort((a, b) => a.start - b.start).find((b) => b.end > now);
 
   return (
-    <Sheet open={!!task} onClose={close} title={editing ? 'Edit task' : (task?.title ?? '')}>
+    <Sheet open={!!task} onClose={close} title={editing ? 'Edit task' : (task?.title ?? 'Task')} bare={!editing}>
       {task && editing && (
-        <div className="grid gap-4">
+        <div className="grid gap-5">
           <TaskForm value={editing} onChange={setEditing} timezone={tz} />
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setEditing(null)}>
@@ -83,7 +86,7 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
                       addToCalendar: editing.addToCalendar,
                       blocks: [],
                     }),
-                  'Task updated.',
+                  'Saved.',
                 )
               }
             >
@@ -94,83 +97,76 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
       )}
 
       {task && !editing && (
-        <div className="grid gap-4">
-          <div className="flex flex-wrap gap-1.5">
-            <Chip tone="teal">{task.category}</Chip>
-            <Chip tone={task.priority === 'high' ? 'red' : task.priority === 'low' ? 'neutral' : 'amber'}>
-              {task.priority === 'med' ? 'medium' : task.priority} priority
-            </Chip>
-            {task.fixedStart === undefined && <Chip>~{formatDuration(task.estimateMin)}</Chip>}
-            {task.spentMin > 0 && <Chip tone="violet">{formatDuration(task.spentMin)} focused</Chip>}
-            {task.recurrence && <Chip tone="violet">{describeRecurrence(task.recurrence)}</Chip>}
-            {task.status === 'done' && <Chip tone="teal">Done</Chip>}
+        <div className="grid gap-5">
+          <div>
+            <h2 className={`text-[28px] font-bold leading-tight ${task.status === 'done' ? 'text-muted line-through' : ''}`}>{task.title}</h2>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {task.status === 'done' && <Chip tone="teal">Done</Chip>}
+              {task.priority !== 'med' && <Chip tone={task.priority === 'high' ? 'red' : 'neutral'}>{PRIORITY[task.priority]}</Chip>}
+              {task.fixedStart === undefined && <Chip>{formatDuration(task.estimateMin)}</Chip>}
+              {task.category !== 'general' && <Chip>{task.category}</Chip>}
+              {task.recurrence && <Chip tone="violet">{describeRecurrence(task.recurrence)}</Chip>}
+              {task.spentMin > 0 && <Chip tone="amber">{formatDuration(task.spentMin)} focused</Chip>}
+            </div>
           </div>
 
-          <dl className="grid gap-2 text-sm">
-            {when && (
-              <div className="flex items-center gap-2">
-                <Clock size={15} className="text-slate-500" />
-                <dt className="sr-only">When</dt>
-                <dd>{when}</dd>
-              </div>
-            )}
-            {task.blocks.length > 0 && (
-              <div>
-                <dt className="mb-1 text-xs font-medium text-slate-600 dark:text-slate-400">Planned</dt>
-                <dd className="grid gap-0.5">
-                  {task.blocks.map((b) => (
-                    <span key={b.id}>
-                      {formatDayLabel(b.start, tz, now)} · {formatTime(b.start, tz)} – {formatTime(b.end, tz)}
-                      {b.chunks > 1 && <span className="text-slate-600 dark:text-slate-400"> (part {b.chunk} of {b.chunks})</span>}
-                    </span>
-                  ))}
-                </dd>
-              </div>
-            )}
-          </dl>
+          {(when || nextBlock) && (
+            <div className="grid gap-1 rounded-[20px] bg-surface-2 p-4 text-sm font-semibold">
+              {when && (
+                <p className="flex items-center gap-2">
+                  <Clock size={16} className="text-muted" /> {when}
+                </p>
+              )}
+              {nextBlock && task.fixedStart === undefined && (
+                <p className="text-muted">
+                  Planned {formatDayLabel(nextBlock.start, tz, now).toLowerCase()}, {formatTime(nextBlock.start, tz)} – {formatTime(nextBlock.end, tz)}
+                  {task.blocks.length > 1 ? ` (+${task.blocks.length - 1} more)` : ''}
+                </p>
+              )}
+            </div>
+          )}
 
-          {learned !== undefined && task && learned !== task.estimateMin && (
-            <p className="rounded-xl bg-violet-50 p-3 text-sm text-violet-950 dark:bg-violet-900/25 dark:text-violet-100">
-              Dayflow plans {formatDuration(learned)} for this. You estimated {formatDuration(task.estimateMin)}, but your {task.category} tasks
-              usually take {learned > task.estimateMin ? 'longer' : 'less time'} than planned.
+          {risk && <p className="rounded-[20px] bg-card-sun p-4 text-sm font-semibold text-ink">{risk.message}</p>}
+          {learned !== undefined && learned !== task.estimateMin && (
+            <p className="rounded-[20px] bg-card-lilac p-4 text-sm font-semibold text-ink">
+              Planned as {formatDuration(learned)}: your {task.category} tasks usually take {learned > task.estimateMin ? 'longer' : 'less'} than you estimate.
             </p>
           )}
 
-          {risk && (
-            <p role="alert" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-950 dark:bg-amber-900/25 dark:text-amber-100">
-              {risk.message}
-            </p>
-          )}
-
-          <div className="grid grid-cols-2 gap-2">
-            {task.status === 'done' ? (
-              <Button
-                onClick={() =>
-                  run(() => updateTask(task.id, { status: 'todo', completedAt: undefined }), 'Reopened.')
-                }
-              >
-                <RotateCcw size={16} /> Reopen
-              </Button>
-            ) : (
-              <>
-                {task.fixedStart === undefined && (
-                  <Button variant="primary" onClick={() => startFocus(task.id)}>
-                    <Timer size={16} /> Focus timer
-                  </Button>
-                )}
-                <Button onClick={() => run(() => completeTask(task.id), `Done: “${task.title}”.`)}>
-                  <CheckCircle2 size={16} /> Mark done
-                </Button>
-                <Button onClick={() => run(() => skipTask(task.id), task.fixedStart === undefined ? 'Moved to tomorrow.' : 'Skipped.')}>
-                  <SkipForward size={16} /> {task.fixedStart === undefined ? 'Skip to tomorrow' : 'Skip'}
-                </Button>
-              </>
-            )}
-            <Button onClick={() => setEditing(toDraft(task))}>
-              <Pencil size={16} /> Edit
+          {task.status === 'done' ? (
+            <Button size="lg" onClick={() => run(() => updateTask(task.id, { status: 'todo', completedAt: undefined }), 'Reopened.')}>
+              <RotateCcw size={18} /> Not done yet
             </Button>
-            <Button variant="ghost" className="col-span-2 !text-red-700 dark:!text-red-300" onClick={() => run(() => deleteTask(task.id), `Deleted “${task.title}”.`)}>
-              <Trash2 size={16} /> Delete
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {task.fixedStart === undefined ? (
+                <button type="button" onClick={() => startFocus(task.id)} className="flex h-14 items-center justify-center gap-2 rounded-full bg-card-lime font-bold text-ink">
+                  <Play size={18} fill="currentColor" /> Start focus
+                </button>
+              ) : (
+                <span />
+              )}
+              <button
+                type="button"
+                onClick={() => run(() => completeTask(task.id), `Done: “${task.title}”. Nice.`)}
+                className={`flex h-14 items-center justify-center gap-2 rounded-full bg-fg font-bold text-app ${task.fixedStart !== undefined ? 'col-span-2' : ''}`}
+              >
+                <Check size={18} strokeWidth={3} /> Done
+              </button>
+            </div>
+          )}
+
+          <div className="flex flex-wrap justify-center gap-2">
+            {task.status !== 'done' && (
+              <Button size="sm" onClick={() => run(() => skipTask(task.id), task.fixedStart === undefined ? 'Moved to tomorrow.' : 'Skipped.')}>
+                <SkipForward size={15} /> {task.fixedStart === undefined ? 'Tomorrow' : 'Skip'}
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setEditing(toDraft(task))}>
+              <Pencil size={15} /> Edit
+            </Button>
+            <Button size="sm" onClick={() => run(() => deleteTask(task.id), `Deleted “${task.title}”.`)}>
+              <Trash2 size={15} /> Delete
             </Button>
           </div>
 

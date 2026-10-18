@@ -89,8 +89,8 @@ export function DayTimeline({ day, tasks, fixedItems, profile, now }: DayTimelin
     <div className="relative ml-12 select-none" style={{ height }} role="list" aria-label="Schedule">
       {/* hour grid */}
       {hours.map((m) => (
-        <div key={m} className="absolute inset-x-0 border-t border-slate-200 dark:border-slate-800" style={{ top: y(m) }}>
-          <span className="absolute -left-12 -top-2.5 w-10 text-right text-[11px] text-slate-600 dark:text-slate-400">
+        <div key={m} className="absolute inset-x-0 border-t border-line" style={{ top: y(m) }}>
+          <span className="absolute -left-12 -top-2.5 w-10 text-right text-[11px] font-semibold text-muted">
             {m < 24 * 60 ? label(m / 60) : ''}
           </span>
         </div>
@@ -100,10 +100,10 @@ export function DayTimeline({ day, tasks, fixedItems, profile, now }: DayTimelin
       {profile.peakEnd > startMin && profile.peakStart < endMin && (
         <div
           aria-hidden
-          className="absolute inset-x-0 rounded-md bg-teal-500/10"
+          className="absolute inset-x-0 rounded-xl bg-card-lime/20"
           style={{ top: y(Math.max(profile.peakStart, startMin)), height: (Math.min(profile.peakEnd, endMin) - Math.max(profile.peakStart, startMin)) * PX_PER_MIN }}
         >
-          <span className="absolute right-2 top-1 text-[10px] font-medium uppercase tracking-wide text-teal-800 dark:text-teal-300">
+          <span className="absolute right-2 top-1 text-[10px] font-bold uppercase tracking-wide text-muted">
             Peak focus
           </span>
         </div>
@@ -128,11 +128,11 @@ export function DayTimeline({ day, tasks, fixedItems, profile, now }: DayTimelin
         <div
           ref={nowRef}
           aria-label={`Now, ${formatTime(now, tz)}`}
-          className="pointer-events-none absolute -left-1.5 right-0 z-20 flex items-center"
+          className="pointer-events-none absolute -left-1.5 right-0 z-20 flex items-center text-red-500"
           style={{ top: y(nowMin) }}
         >
-          <span className="h-3 w-3 rounded-full bg-red-600" />
-          <span className="h-0.5 flex-1 bg-red-600" />
+          <span className="h-3 w-3 rounded-full bg-current" />
+          <span className="h-0.5 flex-1 bg-current" />
         </div>
       )}
     </div>
@@ -176,7 +176,7 @@ function TimelineItem({ item, style, tz, now }: { item: Item; style: React.CSSPr
   const shifted = drag.offsetMin * MIN;
 
   const tone = external
-    ? 'border-dashed border-slate-500 bg-slate-100 text-slate-800 dark:border-slate-400 dark:bg-slate-800 dark:text-slate-100'
+    ? 'border border-dashed border-fg/30 bg-surface-2 text-fg'
     : categoryStyle(task?.category ?? 'general');
 
   const spoken = `${item.title}, ${formatTime(item.start, tz)} to ${formatTime(item.end, tz)}${
@@ -193,9 +193,9 @@ function TimelineItem({ item, style, tz, now }: { item: Item; style: React.CSSPr
       onKeyDown={onKeyDown}
       {...drag.bind}
       style={{ ...style, transform: drag.offsetMin ? `translateY(${drag.offsetMin * PX_PER_MIN}px)` : undefined }}
-      className={`group absolute overflow-hidden rounded-lg border-l-4 px-2 py-1 text-left text-xs shadow-sm ${tone} ${
+      className={`group absolute overflow-hidden rounded-2xl px-2.5 py-1.5 text-left text-xs ${tone} ${
         draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
-      } ${current ? 'ring-2 ring-red-500' : ''} ${done ? 'opacity-55' : ''} ${missed ? 'opacity-75 [background-image:repeating-linear-gradient(135deg,transparent_0_6px,rgb(0_0_0/0.06)_6px_12px)]' : ''} ${
+      } ${current ? 'ring-2 ring-fg' : ''} ${done ? 'opacity-55' : ''} ${missed ? 'opacity-75 [background-image:repeating-linear-gradient(135deg,transparent_0_6px,rgb(0_0_0/0.06)_6px_12px)]' : ''} ${
         drag.offsetMin ? 'z-30 shadow-lg' : ''
       }`}
     >
@@ -210,7 +210,7 @@ function TimelineItem({ item, style, tz, now }: { item: Item; style: React.CSSPr
               const undo = await completeTask(task.id);
               toast(`Done: “${task.title}”.`, { undo });
             }}
-            className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-current opacity-70 hover:bg-white/60 hover:opacity-100 dark:hover:bg-black/30"
+            className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-current opacity-70 hover:bg-white/60 hover:opacity-100"
           >
             <Check size={10} className="opacity-0 group-hover:opacity-100" />
           </button>

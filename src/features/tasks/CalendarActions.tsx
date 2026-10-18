@@ -17,7 +17,7 @@ export function CalendarActions({ task, timezone }: { task: Task; timezone: stri
   const timing = eventTiming(task);
 
   if (!timing) {
-    return <p className="text-xs text-slate-600 dark:text-slate-400">Calendar options appear once this task has a time or a deadline.</p>;
+    return <p className="text-xs text-muted">Calendar options appear once this task has a time or a deadline.</p>;
   }
 
   const linked = !!task.calendarEventId;
@@ -25,7 +25,7 @@ export function CalendarActions({ task, timezone }: { task: Task; timezone: stri
 
   return (
     <div className="grid gap-2">
-      <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Calendar</p>
+      <p className="text-xs font-medium text-muted">Calendar</p>
       <div className="flex flex-wrap gap-2">
         {connected &&
           (task.addToCalendar ? (
@@ -55,7 +55,7 @@ export function CalendarActions({ task, timezone }: { task: Task; timezone: stri
             href={template}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-medium text-slate-800 ring-1 ring-slate-300 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600 dark:hover:bg-slate-700"
+            className="inline-flex items-center gap-1.5 h-9 rounded-full bg-surface-2 px-3.5 text-sm font-semibold hover:brightness-95"
           >
             <ExternalLink size={14} /> Add to Google Calendar
           </a>

@@ -41,7 +41,7 @@ export function EmailSection({ profile }: { profile: Profile }) {
         <h2 className="flex items-center gap-2 font-semibold">
           <Mail size={18} /> Nightly summary email
         </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-sm text-muted">
           {configured
             ? 'Sign in to get a summary every night: your day score, what got done, where your time went, and tomorrow’s plan.'
             : 'A nightly summary of your day by email. Available once the cloud keys are set up (see the README).'}
@@ -77,7 +77,7 @@ export function EmailSection({ profile }: { profile: Profile }) {
           <input
             type="checkbox"
             role="switch"
-            className="h-4 w-4 accent-teal-700"
+            className="h-4 w-4 accent-[var(--app-fg)]"
             checked={profile.emailEnabled}
             onChange={(e) => void updateProfile({ emailEnabled: e.target.checked, emailRecipient: recipient || profile.emailRecipient })}
           />
@@ -97,7 +97,7 @@ export function EmailSection({ profile }: { profile: Profile }) {
             value={profile.emailTime}
             onChange={(e) => e.target.value && void updateProfile({ emailTime: e.target.value })}
           />
-          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">Your time ({profile.timezone}). Arrives within 15 minutes.</p>
+          <p className="mt-1 text-xs text-muted">Your time ({profile.timezone}). Arrives within 15 minutes.</p>
         </div>
         <div>
           <label htmlFor={`${id}-to`} className="mb-1 block text-sm font-medium">
@@ -117,7 +117,7 @@ export function EmailSection({ profile }: { profile: Profile }) {
       </div>
 
       <label className="inline-flex items-center gap-2 text-sm">
-        <input type="checkbox" className="h-4 w-4 accent-teal-700" checked={profile.emailWeekly} onChange={(e) => void updateProfile({ emailWeekly: e.target.checked })} />
+        <input type="checkbox" className="h-4 w-4 accent-[var(--app-fg)]" checked={profile.emailWeekly} onChange={(e) => void updateProfile({ emailWeekly: e.target.checked })} />
         Also send a weekly review on Sunday nights
       </label>
 
@@ -137,7 +137,7 @@ export function EmailSection({ profile }: { profile: Profile }) {
 
       {logs.length > 0 && (
         <div>
-          <p className="mb-1 text-xs font-medium text-slate-600 dark:text-slate-400">Recent emails</p>
+          <p className="mb-1 text-xs font-medium text-muted">Recent emails</p>
           <ul className="grid gap-1 text-sm">
             {logs.map((log) => (
               <li key={log.created_at} className="flex items-center justify-between gap-2">

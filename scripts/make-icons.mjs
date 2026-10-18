@@ -2,9 +2,9 @@
 import { deflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-const TEAL = [15, 118, 110];
-const WHITE = [255, 255, 255];
-const MINT = [153, 246, 228];
+const BACKGROUND = [17, 17, 17];
+const WAVE = [182, 224, 140];
+const DOT = [255, 255, 255];
 
 const crcTable = Array.from({ length: 256 }, (_, n) => {
   let c = n;
@@ -80,16 +80,16 @@ function render(size, { maskable }) {
                 const cy = Math.min(Math.max(py, rx), 64 - rx);
                 return (px - cx) ** 2 + (py - cy) ** 2 <= rx * rx;
               })();
-          if (inside) color = TEAL;
+          if (inside) color = BACKGROUND;
 
           const ux = (px - 32) / scale + 32;
           const uy = (py - 32) / scale + 32;
           if (inside) {
-            if ((ux - 32) ** 2 + (uy - 16) ** 2 <= 16) color = MINT;
+            if ((ux - 32) ** 2 + (uy - 16) ** 2 <= 16) color = DOT;
             const half = 2.5;
             for (const [wx, wy] of wave) {
               if ((ux - wx) ** 2 + (uy - wy) ** 2 <= half * half) {
-                color = WHITE;
+                color = WAVE;
                 break;
               }
             }
