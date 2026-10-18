@@ -67,3 +67,19 @@ dialog::backdrop {
   background-size: 200% 100%;
   animation: shimmer 1.4s ease infinite;
 }
+
+/* Chart roles: validated categorical slots 1-2 (dataviz reference palette) per surface. */
+:root {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --chart-grid: #e2e8f0;
+  --chart-axis: #475569;
+  --chart-surface: #ffffff;
+}
+html.dark {
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --chart-grid: #1e293b;
+  --chart-axis: #94a3b8;
+  --chart-surface: #0f172a;
+}

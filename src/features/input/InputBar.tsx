@@ -3,6 +3,8 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../../components/ui';
 import { runCommand, type CommandOutcome } from '../../lib/commandRunner';
 import { addParsedTasks, updateProfile } from '../../lib/db/actions';
+import { addHabit } from '../../lib/db/habitActions';
+import { describeDays, parseHabit } from '../../lib/habits';
 import { parseInput, parseTasksOnly, type ParsedTask } from '../../lib/parser';
 import { useSpeechRecognition, VOICE_LANGUAGES } from '../../lib/speech/useSpeechRecognition';
 import type { Profile } from '../../lib/types';
@@ -52,6 +54,8 @@ export function InputBar({ profile, now }: { profile: Profile; now: number }) {
     [deferred, minute, profile.timezone],
   );
 
+  const habitPreview = useMemo(() => parseHabit(deferred), [deferred]);
+
   const handleOutcome = (outcome: CommandOutcome, raw: string) => {
     if (outcome.kind === 'done') {
       toast(outcome.message, { undo: outcome.undo });
@@ -72,6 +76,15 @@ export function InputBar({ profile, now }: { profile: Profile; now: number }) {
     if (speech.listening) speech.stop();
     const value = composed.trim();
     if (!value) return;
+
+    const habit = parseHabit(value);
+    if (habit) {
+      const { undo } = await addHabit(habit);
+      toast(`New habit: “${habit.title}” (${describeDays(habit.days).toLowerCase()}).`, { undo });
+      setText('');
+      return;
+    }
+
     const result = parseInput(value, { now: Date.now(), timezone: profile.timezone });
 
     if (result.kind === 'tasks') {
@@ -100,7 +113,7 @@ export function InputBar({ profile, now }: { profile: Profile; now: number }) {
   const nonEnglish = !profile.voiceLang.startsWith('en');
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+    <section aria-label="Add tasks or give a command" className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
       <div className="mx-auto max-w-3xl px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
         {pending?.kind === 'clarify' && (
           <div role="alert" className="mb-2 rounded-xl bg-amber-50 p-3 text-sm dark:bg-amber-900/20">
@@ -136,7 +149,13 @@ export function InputBar({ profile, now }: { profile: Profile; now: number }) {
           </p>
         )}
 
-        <LivePreview result={preview} timezone={profile.timezone} now={now} />
+        {habitPreview ? (
+          <p aria-live="polite" className="mb-2 rounded-xl bg-slate-100 p-2.5 text-sm dark:bg-slate-800/80">
+            New habit: <strong>{habitPreview.title}</strong> · {describeDays(habitPreview.days)}
+          </p>
+        ) : (
+          <LivePreview result={preview} timezone={profile.timezone} now={now} />
+        )}
 
         <form
           className="flex items-end gap-2"
@@ -228,6 +247,6 @@ export function InputBar({ profile, now }: { profile: Profile; now: number }) {
       </div>
 
       <ReviewSheet tasks={review} timezone={profile.timezone} onConfirm={confirmTasks} onCancel={() => setReview(null)} />
-    </div>
+    </section>
   );
 }

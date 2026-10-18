@@ -36,6 +36,10 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // the main chunk is mostly react-dom and dexie; charts and the Supabase client load lazily
+    chunkSizeWarningLimit: 700,
+  },
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],

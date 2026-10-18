@@ -4,7 +4,7 @@ import { Sheet } from '../../components/Sheet';
 import { Button, Chip } from '../../components/ui';
 import { completeTask, deleteTask, skipTask, updateTask } from '../../lib/db/actions';
 import type { ParsedTask } from '../../lib/parser';
-import type { Risk } from '../../lib/scheduler';
+import { adjustEstimate, statsFromTasks, type Risk } from '../../lib/scheduler';
 import { formatDayLabel, formatDuration, formatTime } from '../../lib/time/tz';
 import type { Profile, Task } from '../../lib/types';
 import { useUi } from '../../store/ui';
@@ -53,6 +53,7 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
   };
 
   const risk = task && risks.find((r) => r.taskId === task.id);
+  const learned = task && task.fixedStart === undefined && task.status !== 'done' ? adjustEstimate(task.estimateMin, task.category, statsFromTasks(tasks)) : undefined;
   const when = task && describeWhen(task, tz, now);
 
   return (
@@ -127,6 +128,13 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
               </div>
             )}
           </dl>
+
+          {learned !== undefined && task && learned !== task.estimateMin && (
+            <p className="rounded-xl bg-violet-50 p-3 text-sm text-violet-950 dark:bg-violet-900/25 dark:text-violet-100">
+              Dayflow plans {formatDuration(learned)} for this. You estimated {formatDuration(task.estimateMin)}, but your {task.category} tasks
+              usually take {learned > task.estimateMin ? 'longer' : 'less time'} than planned.
+            </p>
+          )}
 
           {risk && (
             <p role="alert" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-950 dark:bg-amber-900/25 dark:text-amber-100">

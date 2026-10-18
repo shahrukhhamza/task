@@ -3,12 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Card, EmptyState, Skeleton } from '../components/ui';
 import { ReconnectBanner } from '../features/account/ReconnectBanner';
+import { EveningCheckin } from '../features/checkin/EveningCheckin';
+import { TodayHabits } from '../features/habits/TodayHabits';
 import { DayTimeline } from '../features/timeline/DayTimeline';
 import { MorningScreen } from '../features/morning/MorningScreen';
 import type { PlannerData } from '../hooks/useData';
 import { replanAll } from '../lib/db/actions';
 import { collectFixed } from '../lib/scheduler';
-import { addDaysTz, endOfDayTz, formatDayLabel, formatDuration, isSameDayTz, startOfDayTz } from '../lib/time/tz';
+import { addDaysTz, dayKey, endOfDayTz, formatDayLabel, formatDuration, isSameDayTz, minutesOfDay, startOfDayTz } from '../lib/time/tz';
 import { useUi } from '../store/ui';
 
 const EXAMPLES = [
@@ -18,7 +20,7 @@ const EXAMPLES = [
 ];
 
 export function TodayPage({ data }: { data: PlannerData }) {
-  const { tasks, fixedEvents, profile, now, livePlan, loading } = data;
+  const { tasks, fixedEvents, profile, now, livePlan, loading, habits, habitLogs, checkins } = data;
   const tz = profile.timezone;
   const [offset, setOffset] = useState(0);
   const toast = useUi((s) => s.toast);
@@ -51,8 +53,18 @@ export function TodayPage({ data }: { data: PlannerData }) {
     );
   }
 
+  const today = dayKey(now, tz);
+  const companions = (
+    <>
+      <TodayHabits habits={habits} logs={habitLogs} today={today} />
+      <EveningCheckin key={today} date={today} existing={checkins.find((c) => c.date === today)} hour={Math.floor(minutesOfDay(now, tz) / 60)} />
+    </>
+  );
+
   if (tasks.length === 0) {
     return (
+      <>
+      {companions}
       <EmptyState icon={<Sparkles size={22} />} title="Your day is a blank page">
         <p>Type or say what’s on your mind below. Dayflow will find the time, and re-plan when things slip.</p>
         <div className="mt-4 grid gap-2 text-left">
@@ -68,6 +80,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
           ))}
         </div>
       </EmptyState>
+      </>
     );
   }
 
@@ -78,6 +91,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
     <div>
       <ReconnectBanner />
       {isToday && <MorningScreen data={data} />}
+      {isToday && companions}
 
       {isToday && missedCount > 0 && (
         <Card className="mb-4 !border-amber-300 !bg-amber-50 dark:!border-amber-700 dark:!bg-amber-900/20">

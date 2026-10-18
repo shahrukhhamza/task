@@ -31,13 +31,16 @@ export function MorningScreen({ data }: { data: PlannerData }) {
     const start = startOfDayTz(now, tz);
     const end = endOfDayTz(now, tz);
     const active = tasks.filter((t) => ['todo', 'scheduled', 'doing'].includes(t.status));
-    const todays = active.flatMap((t) => t.blocks).filter((b) => b.start < end && b.end > start);
+    const allToday = active.flatMap((t) => t.blocks).filter((b) => b.start < end && b.end > start);
+    // only what's still ahead; passed blocks are covered by the "you're behind" banner
+    const todays = allToday.filter((b) => b.end > now);
     const plannedMin = todays.reduce((sum, b) => sum + (b.end - b.start) / MIN, 0);
     const finishAt = todays.reduce((latest, b) => Math.max(latest, b.end), 0);
     const carried = active.filter((t) => (t.carriedOverAt ?? 0) >= start || t.blocks.some((b) => b.end <= start));
     const feasibility = dayFeasibility({ tasks, fixedEvents, profile, now, estimates: statsFromTasks(tasks) }, livePlan);
-    const fixedToday = livePlan.fixed.filter((f) => f.start < end && f.end > start && !f.done).length;
-    return { plannedMin, finishAt, carried, feasibility, fixedToday, blockCount: todays.length };
+    const fixedToday = livePlan.fixed.filter((f) => f.start < end && f.end > Math.max(start, now) && !f.done).length;
+    const doneToday = tasks.some((t) => t.status === 'done' && (t.completedAt ?? 0) >= start);
+    return { plannedMin, finishAt, carried, feasibility, fixedToday, blockCount: todays.length, hadPlan: allToday.length > 0 || doneToday };
   }, [tasks, fixedEvents, profile, now, tz, livePlan]);
 
   const hour = Number(new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: tz }).format(now)) % 24;
@@ -78,10 +81,14 @@ export function MorningScreen({ data }: { data: PlannerData }) {
       {!closed && (
         <div className="mt-3 grid gap-3 text-sm">
           {stats.blockCount === 0 && stats.fixedToday === 0 ? (
-            <p className="text-slate-700 dark:text-slate-300">Nothing is planned for today yet. Add a task below and I’ll find time for it.</p>
+            <p className="text-slate-700 dark:text-slate-300">
+              {stats.hadPlan
+                ? 'Nothing left on today’s plan.'
+                : 'Nothing is planned for today yet. Add a task below and I’ll find time for it.'}
+            </p>
           ) : (
             <p>
-              Today you have <strong>{formatDuration(stats.plannedMin)}</strong> of focused work in {stats.blockCount}{' '}
+              You have <strong>{formatDuration(stats.plannedMin)}</strong> of focused work left in {stats.blockCount}{' '}
               {stats.blockCount === 1 ? 'block' : 'blocks'}
               {stats.fixedToday > 0 && (
                 <>

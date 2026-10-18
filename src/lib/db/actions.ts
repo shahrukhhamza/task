@@ -286,13 +286,20 @@ export async function moveFixedTask(taskId: string, newStart: number): Promise<M
 // ------------------------------------------------------------------ data management
 
 export async function exportAll(): Promise<{ json: string; csv: string }> {
-  const [tasks, taskEvents, fixedEvents, profile] = await Promise.all([
+  const [tasks, taskEvents, fixedEvents, profile, habits, habitLogs, checkins] = await Promise.all([
     db.tasks.toArray(),
     db.taskEvents.toArray(),
     db.fixedEvents.toArray(),
     db.profile.toArray(),
+    db.habits.toArray(),
+    db.habitLogs.toArray(),
+    db.checkins.toArray(),
   ]);
-  const json = JSON.stringify({ exportedAt: new Date().toISOString(), version: 1, profile, tasks, taskEvents, fixedEvents }, null, 2);
+  const json = JSON.stringify(
+    { exportedAt: new Date().toISOString(), version: 2, profile, tasks, taskEvents, fixedEvents, habits, habitLogs, checkins },
+    null,
+    2,
+  );
 
   const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const iso = (ts?: number) => (ts ? new Date(ts).toISOString() : '');

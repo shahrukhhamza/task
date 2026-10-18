@@ -1,5 +1,5 @@
 import { TZDate } from '@date-fns/tz';
-import * as chrono from 'chrono-node';
+import * as chrono from 'chrono-node/en';
 import type { ParsedComponents } from 'chrono-node';
 import type { ParseContext } from './types';
 

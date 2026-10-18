@@ -201,6 +201,13 @@ describe('writing tasks to Google', () => {
     expect((await db.calendarLinks.toArray()).every((l) => l.deletedAt)).toBe(true);
   });
 
+  it('never creates an event for a task that is already finished', async () => {
+    const db = freshDb();
+    const cal = fakeCalendar();
+    await db.tasks.put(makeTask({ id: UUID, addToCalendar: true, status: 'done', fixedStart: at(10, 19, 9), fixedEnd: at(10, 19, 10) }));
+    expect(await syncCalendarLinks(cal.invoke, db, TZ)).toEqual({ created: 0, updated: 0, deleted: 0 });
+  });
+
   it('waits for a flexible task to be planned before adding it', async () => {
     const db = freshDb();
     const cal = fakeCalendar();

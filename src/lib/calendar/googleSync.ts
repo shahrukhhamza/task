@@ -101,8 +101,8 @@ export async function syncCalendarLinks(invoke: Invoke, db: DayflowDB, tz: strin
       continue;
     }
 
-    // finished tasks keep their event as a record; nothing to update
-    if (task.status === 'done' && link) continue;
+    // finished tasks keep any event they have as a record, and never get a new one
+    if (task.status === 'done') continue;
 
     const payload = googleEventPayload(task, tz);
     if (!payload) continue; // not planned yet; try again after the next plan

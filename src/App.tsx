@@ -1,7 +1,9 @@
-import { CalendarDays, Settings, Sun, WifiOff } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { BarChart3, CalendarDays, Repeat, Settings, Sun, WifiOff } from 'lucide-react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toasts } from './components/Toasts';
+import { Skeleton } from './components/ui';
 import { FocusOverlay } from './features/focus/FocusOverlay';
 import { InputBar } from './features/input/InputBar';
 import { TaskSheet } from './features/tasks/TaskSheet';
@@ -10,14 +12,20 @@ import { initCloud } from './lib/cloud/session';
 import { useReminders } from './lib/notify';
 import { useShortcuts } from './hooks/useShortcuts';
 import { useTheme } from './lib/theme';
-import { SettingsPage } from './pages/SettingsPage';
 import { TodayPage } from './pages/TodayPage';
-import { UpcomingPage } from './pages/UpcomingPage';
 import { useUi } from './store/ui';
+
+// Today loads with the app; the rest (charts in particular) load when first opened
+const UpcomingPage = lazy(() => import('./pages/UpcomingPage').then((m) => ({ default: m.UpcomingPage })));
+const HabitsPage = lazy(() => import('./pages/HabitsPage').then((m) => ({ default: m.HabitsPage })));
+const ReportPage = lazy(() => import('./pages/ReportPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 
 const NAV = [
   { to: '/', label: 'Today', icon: Sun },
   { to: '/upcoming', label: 'Upcoming', icon: CalendarDays },
+  { to: '/habits', label: 'Habits', icon: Repeat },
+  { to: '/report', label: 'Report', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -82,8 +90,8 @@ function Shell() {
                 }
               >
                 <Icon size={16} />
-                <span className="hidden sm:inline">{label}</span>
-                <span className="sr-only sm:hidden">{label}</span>
+                <span className="hidden md:inline">{label}</span>
+                <span className="sr-only md:hidden">{label}</span>
               </NavLink>
             ))}
           </nav>
@@ -91,12 +99,18 @@ function Shell() {
       </header>
 
       <main id="main" className="mx-auto max-w-3xl px-4 pb-80 pt-4">
-        <Routes>
-          <Route path="/" element={<TodayPage data={data} />} />
-          <Route path="/upcoming" element={<UpcomingPage data={data} />} />
-          <Route path="/settings" element={<SettingsPage data={data} />} />
-          <Route path="*" element={<TodayPage data={data} />} />
-        </Routes>
+        <ErrorBoundary>
+          <Suspense fallback={<Skeleton className="h-96" />}>
+            <Routes>
+              <Route path="/" element={<TodayPage data={data} />} />
+              <Route path="/upcoming" element={<UpcomingPage data={data} />} />
+              <Route path="/habits" element={<HabitsPage data={data} />} />
+              <Route path="/report" element={<ReportPage data={data} />} />
+              <Route path="/settings" element={<SettingsPage data={data} />} />
+              <Route path="*" element={<TodayPage data={data} />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
 
       <InputBar profile={data.profile} now={data.now} />

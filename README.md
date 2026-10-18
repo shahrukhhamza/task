@@ -1,88 +1,145 @@
 # Dayflow
 
-A voice + text daily planner. You type or say what you need to do, Dayflow turns it into tasks, time-blocks your day around your energy, and re-plans when you fall behind.
+A voice + text daily planner and companion. Type or say what you need to do; Dayflow turns
+it into tasks, time-blocks your day around your energy, re-plans when you fall behind,
+syncs with Google Calendar, and emails you a summary every night.
 
-**Status: Phase 1 (offline-first core) is complete.** Everything works without any backend or account. Phases 2–4 (Supabase sync, Google Calendar, nightly email, habits and weekly reports) are not built yet. See the [roadmap](#roadmap).
+- **Free to run.** No paid APIs, no LLM calls, no credit card anywhere. Understanding text
+  is deterministic (chrono-node + rules).
+- **Local-first.** Everything works offline in the browser. Cloud features (sync, Google
+  Calendar, email, background reminders) switch on when you add free Supabase keys.
+- **Installable PWA** for phone and desktop.
 
-Everything here is free: no paid APIs, no LLM calls, no accounts needed. Understanding text is done by deterministic rules plus [chrono-node](https://github.com/wanasit/chrono).
-
-## Run it
+## Quick start
 
 Requires Node 20+.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm test           # unit tests (parser, scheduler, layout)
+npm run dev          # http://localhost:5173, fully working with no setup
+npm test             # unit + integration tests
 npm run typecheck
-npm run build && npm run preview   # production build, installable PWA
+npm run build        # production build into dist/
 ```
 
-No environment variables are needed in Phase 1 (`.env.example` lists what later phases will use).
+To switch on sign-in, sync, Google Calendar, nightly emails and closed-app reminders,
+follow **[docs/SETUP.md](docs/SETUP.md)**. It walks through every free account and key step by step.
 
-## What works today
+## Features
 
-- **Smart input bar** (bottom of the screen). Type or speak, one pipeline: input → transcript → parser → editable cards → planner.
-  - Live preview of the parsed title, date/time, duration, priority, category and repeat as you type.
-  - Mic button using the browser's Web Speech API, with live interim text, a language picker, and clear states for "permission denied", "no mic", "offline" and "unsupported browser" (typing keeps working).
-  - Pasted lists are split into separate tasks (newlines, bullets, commas, "and").
-  - Shortcuts: `#category`, `!high` `!med` `!low`, `~2h` `~30m` `~1h30m`, `@friday`.
-  - `/` or `Ctrl+K` focuses the input from anywhere.
-- **Parser** (`src/lib/parser`): title, deadline, fixed start/end for appointments, duration, priority, category, recurrence ("every Monday and Wednesday"), "add to my calendar" flag. Commands against existing tasks, matched with fuzzy search, with a clarifying question when two tasks fit: *push gym to tomorrow*, *I finished the assignment*, *start the assignment*, *I'm running 30 minutes late*, *what's next?*, *delete call mom*.
-- **Scheduler** (`src/lib/scheduler`, pure functions): priority score from urgency, importance and age; time-blocks tasks around fixed events; hard work goes to your peak-focus window, easy work to low-energy time; breaks, buffers, chunking of long tasks, and a daily focus cap; "I'm behind" re-plan; deadline-risk warnings with suggestions; "can I finish everything today?" check; per-category estimate learning.
-- **Day timeline**: today view with a current-time line, drag to move a block (15-minute snap; keyboard: focus a block and press `Alt+↑/↓`), tap for complete / skip / edit / delete, undo on every destructive action.
-- **Focus timer**: Pomodoro (25/5 or 50/10) per task, distraction-free full-screen, keeps the screen awake, logs focus time.
-- **Morning screen**, **Upcoming (7 days)** and a **deadline-risk panel**.
-- **Settings**: timezone (default Asia/Karachi, stored per user, never hardcoded), working hours, peak window, pacing, theme, JSON/CSV export, delete all data.
-- **Local-first PWA**: data lives in IndexedDB (Dexie); installable and works offline. Dark mode, responsive, keyboard-navigable.
+**Smart input (text and voice, one pipeline)**: input → transcript → parser → editable
+cards → planner.
+- Live preview of what was understood as you type; edit any card before it's added.
+- Mic with live transcript, language picker, and clear states for denied permission,
+  no mic, offline and unsupported browsers.
+- Pasted lists split into tasks. Shortcuts: `#category`, `!high|!med|!low`, `~2h`, `@friday`.
+- Commands: *push gym to tomorrow*, *I finished the assignment*, *start the assignment*,
+  *I'm running 30 minutes late*, *what's next?*, *delete call mom*, *add gym to my calendar*.
+  Targets are fuzzy-matched; Dayflow asks when two tasks fit.
+- `habit: read 20 pages every weekday` creates a habit. `/` or `Ctrl+K` focuses the input.
 
-## Example input
+**Planning engine** (`src/lib/scheduler`, pure functions)
+- Priority from urgency (time to deadline vs. work left), importance and age.
+- Hard work goes in your peak-focus window, easy work in low-energy time; breaks, buffers,
+  chunking of long tasks, a daily focus cap; never overlaps fixed events or calendar events.
+- "I'm behind" re-packs the rest of the day; deadline-risk warnings ("At this pace you'll
+  miss Thursday's deadline") with one-tap fixes (move or drop lower-priority work).
+- Learns how long your tasks really take per category and adjusts future plans.
+
+**Day to day**
+- Today timeline with a now-line, drag (or `Alt+↑/↓`) to move blocks, tap to complete,
+  skip, edit or delete, and undo on everything destructive.
+- Pomodoro focus timer in a distraction-free full screen.
+- Morning summary with carried-over tasks and a "can I finish everything?" check.
+- Upcoming 7 days and a deadline panel; habits with streaks; evening mood/energy check-in.
+- Weekly "where did my time go" report with charts (each with a table view).
+- Reminders before each block: in-app, and via Web Push when the app is closed.
+
+**Cloud (optional)**
+- Google sign-in; two-way sync to Supabase with row level security on every table.
+- Google Calendar: your events block time in the plan; tasks can be added to the calendar
+  and stay in sync (updates, deletes). Without signing in: `.ics` files and
+  "Add to Google Calendar" links.
+- Nightly HTML email at your chosen local time (score, done/missed/rescheduled, planned vs.
+  actual, time by category, focus stats, an insight, tomorrow's plan, upcoming deadlines),
+  a weekly edition on Sundays, test send, and one-click unsubscribe.
+- JSON and CSV export at any time.
+
+## Project layout
 
 ```
-Physics assignment due Thursday, about 2 hours, high priority
-Gym at 6pm, call mom, client meeting tomorrow 3 to 4
-Dentist Friday 4pm add to my calendar
-Study chemistry ~90m #exam !high
-Team standup every weekday at 9am
+src/
+  lib/parser/        text → tasks/commands (TextUnderstander interface, rule-based impl.)
+  lib/scheduler/     planning engine: scoring, slots, placement, re-plan, risk, estimates
+  lib/db/            Dexie schema and every data-changing action (undoable)
+  lib/sync/          local-first sync engine + Supabase remote
+  lib/calendar/      Google payloads, .ics export, calendar import/write-back
+  lib/cloud/         lazily loaded Supabase client, session, push subscription
+  features/, pages/  UI (React + Tailwind)
+  sw.ts              service worker: offline shell, push, notification clicks
+supabase/
+  migrations/        0001 schema + RLS, 0002 pg_cron jobs
+  functions/         google-calendar, daily-summary, send-reminders (+ _shared pure code)
+tests/               Vitest suites (parser, scheduler, sync, SQL/RLS, functions, email, push)
+docs/SETUP.md        free credentials and deployment, step by step
 ```
 
-## How it's organised
+Shared logic in `supabase/functions/_shared` (analytics, email rendering, timezone helpers,
+Web Push) is plain TypeScript, used by both the Edge Functions and the app's report page.
 
-```
-src/lib/parser/      text → tasks or commands (TextUnderstander interface; rule-based implementation)
-src/lib/scheduler/   pure planning engine: score, slots, placement, re-plan, risk, estimates
-src/lib/db/          Dexie schema and every action that changes data (all undoable)
-src/lib/time/        timezone helpers; nothing in the app assumes a zone
-src/features/        input bar, timeline, focus timer, morning, upcoming, task sheet
-src/pages/           Today, Upcoming, Settings
-tests/               Vitest suites for the parser (70+ sentences), commands and scheduler
-```
+## Environment variables
 
-The parser sits behind the `TextUnderstander` interface (`src/lib/parser/understander.ts`), so a free in-browser model could be swapped in later without touching the UI.
+App (`.env.local`, see `.env.example`): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+`VITE_VAPID_PUBLIC_KEY`. All optional.
 
-## Deploy for free
+Edge Functions (`supabase/functions/.env`, see its `.env.example`): `GOOGLE_CLIENT_ID`,
+`GOOGLE_CLIENT_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`, `APP_URL`, `CRON_SECRET`,
+`UNSUBSCRIBE_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
 
-Phase 1 is a static site, so any free static host works.
+No secret is ever committed; both env files are git-ignored.
 
-- **Cloudflare Pages**: connect the repo, build command `npm run build`, output directory `dist`. `public/_redirects` handles client-side routing.
-- **Vercel**: import the repo (framework: Vite). `vercel.json` handles client-side routing.
+## Deploying for free
+
+The app is a static site: build command `npm run build`, output `dist`.
+- **Vercel**: import the repo (framework Vite). `vercel.json` handles routing.
+- **Cloudflare Pages**: connect the repo with the settings above. `public/_redirects` handles routing.
+
+Backend: one free Supabase project (database, auth, Edge Functions, pg_cron). Full steps in
+[docs/SETUP.md](docs/SETUP.md).
+
+## How it was verified
+
+- 246 automated tests: parser (70+ sentences) and commands, scheduler, timezone/DST, sync
+  conflicts and offline edits, the SQL migrations and row level security in an embedded
+  Postgres (PGlite), all three Edge Function handlers against mocked Google/Resend/push
+  services, email rendering, and Web Push encryption against the RFC 8291 test vector.
+- Edge Functions type-checked with Deno; the app with `tsc` (strict).
+- Browser runs in Edge (Playwright): every flow, offline reload, reminders, and an axe
+  accessibility audit of every page in light and dark mode with no violations.
+
+**Not yet verified against the live services**: nothing has run against a real Supabase
+project, Google account, Resend or a push service, because no credentials exist yet. Expect
+the first live run (docs/SETUP.md step 8) to be the real integration test.
 
 ## Known limitations
 
-- **Voice works best in Chrome and Edge.** The Web Speech API is missing or limited in Firefox and some mobile browsers, and Chrome sends audio to Google's servers, so voice needs a connection. Typing always works, offline included.
-- **Parsing is English-only.** You can pick other voice languages and they will be transcribed, but dates, priorities and commands are only understood in English.
-- **The rule-based parser is not an LLM.** Unusual phrasing can be misread, which is why every task is shown as an editable card before it is added. "Meeting with Ali, Sara and Omar" would be split into three items, for example.
-- **Reminders and notifications are not built yet** (Phase 3). Browser notifications without a push server are best-effort, especially on iOS.
-- **Estimate learning needs history.** It only starts correcting a category after three tasks in it were finished with the focus timer.
-- **Data is per device** until Phase 2 adds sync. Use Settings → Export to back it up.
-- **Dragging a block pins it**, so the planner leaves it where you put it, even through a re-plan.
-- When Phase 2 arrives: Google OAuth tokens expire after 7 days while the Google app is in "Testing" mode, and free Supabase projects pause after a week of inactivity. The README will cover both.
-
-## Roadmap
-
-| Phase | Scope | Status |
-|---|---|---|
-| 1 | Offline-first core: input, parser, scheduler, timeline, PWA | Done |
-| 2 | Supabase auth + sync, RLS, Google sign-in, Calendar read/write, `.ics` fallback | Not started |
-| 3 | Nightly email (Edge Function + pg_cron + Resend), email settings, reminders | Not started |
-| 4 | Habits and streaks, check-ins, weekly report, polish, deployment docs | Not started |
+- **Google testing mode**: refresh tokens expire after 7 days while the OAuth app is in
+  "Testing". Dayflow shows a one-click **Reconnect Google** prompt. Publishing the app needs
+  Google's (free) verification for the Calendar scope.
+- **Supabase free projects pause** after 7 days without activity. Restore from the dashboard;
+  data is kept, and Dayflow keeps working offline in the meantime.
+- **Voice works best in Chrome and Edge.** The Web Speech API is missing in Firefox and
+  limited on some mobile browsers, and Chrome sends audio to Google's speech service, so voice
+  needs a connection. Typing always works.
+- **Parsing is English-only.** Other voice languages are transcribed but not understood.
+- **The parser is rule-based**, so unusual phrasing can be misread. That's why every task is
+  shown as an editable card first. Commas split lists, so "meet Ali, Sara and Omar" becomes
+  several items.
+- **Resend without a domain** only delivers to the email you signed up to Resend with.
+- **Email timing**: the job runs every 15 minutes, so a 21:30 email arrives by about 21:45.
+  Dark mode in email depends on the client; Gmail recolours on its own.
+- **Push on iPhone** requires adding Dayflow to the Home Screen (iOS 16.4+).
+- **Sync is last-write-wins per row**: if the same task is edited on two offline devices,
+  the later edit wins.
+- **Calendar**: a flexible task appears in Google at its first planned block, and all-day
+  Google events don't block time.
