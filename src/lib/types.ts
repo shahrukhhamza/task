@@ -75,6 +75,8 @@ export interface TaskEvent {
   /** Minutes, for `focus` events. */
   durationMin?: number;
   category?: string;
+  /** Rows created before sync existed have no flag and count as unsynced. */
+  syncState?: SyncState;
 }
 
 export interface FixedEvent {
@@ -105,7 +107,66 @@ export interface Profile {
   bufferMin: number;
   theme: 'system' | 'light' | 'dark';
   voiceLang: string;
+  /** Nightly summary email. */
+  emailEnabled: boolean;
+  /** Local time of day, "HH:MM", in `timezone`. */
+  emailTime: string;
+  emailRecipient: string;
+  emailWeekly: boolean;
+  remindersEnabled: boolean;
+  /** Minutes before a block starts. */
+  reminderLeadMin: number;
   updatedAt: number;
+  syncState?: SyncState;
+}
+
+export interface Habit {
+  id: string;
+  title: string;
+  category: string;
+  /** Weekdays the habit applies to, 0 = Sunday. All seven means daily. */
+  days: number[];
+  archived?: boolean;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt?: number | null;
+  syncState: SyncState;
+}
+
+/** One row per habit per local day; un-checking soft-deletes it. */
+export interface HabitLog {
+  id: string;
+  habitId: string;
+  /** Local date, yyyy-MM-dd. */
+  date: string;
+  updatedAt: number;
+  deletedAt?: number | null;
+  syncState: SyncState;
+}
+
+/** Evening check-in; the id is the local date so there is at most one per day. */
+export interface Checkin {
+  id: string;
+  date: string;
+  mood: 1 | 2 | 3 | 4 | 5;
+  energy: 1 | 2 | 3 | 4 | 5;
+  note?: string;
+  createdAt: number;
+  updatedAt: number;
+  syncState: SyncState;
+}
+
+/** Maps a task to its Google Calendar event so edits and deletes stay in sync. */
+export interface CalendarLink {
+  id: string;
+  taskId: string;
+  eventId: string;
+  calendarId: string;
+  /** Hash of what was last written to Google, to detect when an update is needed. */
+  payloadHash: string;
+  updatedAt: number;
+  deletedAt?: number | null;
+  syncState: SyncState;
 }
 
 export const DEFAULT_TIMEZONE = 'Asia/Karachi';
@@ -123,5 +184,11 @@ export const DEFAULT_PROFILE: Profile = {
   bufferMin: 10,
   theme: 'system',
   voiceLang: 'en-US',
+  emailEnabled: false,
+  emailTime: '21:30',
+  emailRecipient: '',
+  emailWeekly: true,
+  remindersEnabled: false,
+  reminderLeadMin: 5,
   updatedAt: 0,
 };

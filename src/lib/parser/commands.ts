@@ -68,6 +68,10 @@ export function parseCommand(input: string, ctx: ParseContext): ParsedCommand | 
   m = new RegExp(`^(?:i(?:'m|\\s+am)\\s+|let'?s\\s+|lets\\s+|now\\s+)+(?:work\\s+on|working\\s+on)\\s+(?:the\\s+|my\\s+)?(.+)$`).exec(lower);
   if (m) return { kind: 'start', target: clean(m[1]) };
 
+  // "add gym to my calendar" for a task that already exists; with a date it's a new task instead
+  m = /^(?:please\s+)?(?:add|put|sync|save)\s+(?:the\s+|my\s+)?(.+?)\s+(?:to|on|in|into)\s+(?:my\s+)?(?:google\s+)?calendar$/.exec(lower);
+  if (m && parseDates(m[1], ctx).length === 0) return { kind: 'calendar', target: clean(m[1]) };
+
   // "delete call mom"
   m = /^(?:please\s+)?(?:delete|remove|cancel|drop|scrap|trash|get\s+rid\s+of|forget\s+about)\s+(?:the\s+|my\s+)?(.+)$/.exec(lower);
   if (m) return { kind: 'delete', target: clean(m[1]) };

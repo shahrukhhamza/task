@@ -22,6 +22,8 @@ function describeCommand(c: ParsedCommand, tz: string, now: number): string {
       return c.minutes ? `You’re ${c.minutes} min behind: re-plan the day` : 'You’re behind: re-plan from now';
     case 'next':
       return 'Show what’s next';
+    case 'calendar':
+      return `Add “${c.target}” to Google Calendar`;
   }
 }
 

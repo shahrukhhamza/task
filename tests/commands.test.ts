@@ -109,3 +109,16 @@ describe('resolving command targets', () => {
     expect(resolveTarget('gym', []).kind).toBe('none');
   });
 });
+
+describe('calendar command', () => {
+  it('targets an existing task when there is no date', () => {
+    expect(cmd('add gym to my calendar')).toEqual({ kind: 'calendar', target: 'gym' });
+    expect(cmd('put the dentist appointment on my google calendar')).toEqual({ kind: 'calendar', target: 'dentist appointment' });
+  });
+
+  it('creates a new task when the sentence has a date', () => {
+    const r = parseInput('add dentist Friday 4pm to my calendar', CTX);
+    expect(r.kind).toBe('tasks');
+    if (r.kind === 'tasks') expect(r.tasks[0]).toMatchObject({ title: 'Dentist', addToCalendar: true, fixedStart: at(10, 23, 16) });
+  });
+});

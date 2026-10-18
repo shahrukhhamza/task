@@ -307,10 +307,24 @@ export async function exportAll(): Promise<{ json: string; csv: string }> {
 
 export async function updateProfile(changes: Partial<Profile>): Promise<void> {
   await ensureProfile();
-  await db.profile.update('me', { ...changes, updatedAt: Date.now() });
+  await db.profile.update('me', { ...changes, updatedAt: Date.now(), syncState: 'dirty' });
   await replanAll();
 }
 
+/** Flags a task for Google Calendar; the sync loop creates, updates or removes the event. */
+export async function setAddToCalendar(id: string, on: boolean): Promise<Undo> {
+  return withUndo([id], () => patch(id, { addToCalendar: on }));
+}
+
 export async function clearAllData(): Promise<void> {
-  await Promise.all([db.tasks.clear(), db.taskEvents.clear(), db.fixedEvents.clear()]);
+  await Promise.all([
+    db.tasks.clear(),
+    db.taskEvents.clear(),
+    db.fixedEvents.clear(),
+    db.habits.clear(),
+    db.habitLogs.clear(),
+    db.checkins.clear(),
+    db.calendarLinks.clear(),
+    db.syncMeta.clear(),
+  ]);
 }

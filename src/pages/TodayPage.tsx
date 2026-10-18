@@ -2,6 +2,7 @@ import { CalendarCheck, ChevronLeft, ChevronRight, Clock4, Sparkles, TriangleAle
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Card, EmptyState, Skeleton } from '../components/ui';
+import { ReconnectBanner } from '../features/account/ReconnectBanner';
 import { DayTimeline } from '../features/timeline/DayTimeline';
 import { MorningScreen } from '../features/morning/MorningScreen';
 import type { PlannerData } from '../hooks/useData';
@@ -75,6 +76,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
 
   return (
     <div>
+      <ReconnectBanner />
       {isToday && <MorningScreen data={data} />}
 
       {isToday && missedCount > 0 && (

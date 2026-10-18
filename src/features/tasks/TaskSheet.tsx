@@ -10,6 +10,7 @@ import type { Profile, Task } from '../../lib/types';
 import { useUi } from '../../store/ui';
 import { describeRecurrence, describeWhen } from '../input/describe';
 import { TaskForm } from '../input/TaskForm';
+import { CalendarActions } from './CalendarActions';
 
 const toDraft = (t: Task): ParsedTask => ({
   raw: t.title,
@@ -164,6 +165,8 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
               <Trash2 size={16} /> Delete
             </Button>
           </div>
+
+          <CalendarActions task={task} timezone={tz} />
         </div>
       )}
     </Sheet>

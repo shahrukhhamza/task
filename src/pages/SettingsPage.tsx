@@ -1,9 +1,14 @@
-import { Download, Smartphone, Trash2 } from 'lucide-react';
+import { CalendarDays, Download, Smartphone, Trash2 } from 'lucide-react';
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { Sheet } from '../components/Sheet';
 import { Button, Card, fieldClass } from '../components/ui';
+import { AccountSection } from '../features/account/AccountSection';
 import type { PlannerData } from '../hooks/useData';
-import { clearAllData, exportAll, updateProfile } from '../lib/db/actions';
+import { buildIcs } from '../lib/calendar/ics';
+import { deleteCloudData } from '../lib/cloud/session';
+import { clearAllData, exportAll, isActive, updateProfile } from '../lib/db/actions';
+import { download } from '../lib/download';
+import { useCloud } from '../store/cloud';
 import { statsFromTasks } from '../lib/scheduler';
 import { timeZones } from '../lib/time/tz';
 import type { Profile } from '../lib/types';
@@ -32,18 +37,10 @@ interface InstallEvent extends Event {
   prompt(): Promise<void>;
 }
 
-function download(name: string, content: string, type: string) {
-  const url = URL.createObjectURL(new Blob([content], { type }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 export function SettingsPage({ data }: { data: PlannerData }) {
   const { profile, tasks } = data;
   const toast = useUi((s) => s.toast);
+  const signedIn = useCloud((s) => !!s.user);
   const [error, setError] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [installEvent, setInstallEvent] = useState<InstallEvent | null>(null);
@@ -74,6 +71,8 @@ export function SettingsPage({ data }: { data: PlannerData }) {
   return (
     <div className="grid gap-4">
       <h1 className="text-lg font-semibold">Settings</h1>
+
+      <AccountSection />
 
       {error && (
         <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-900 dark:bg-red-900/20 dark:text-red-100">
@@ -185,7 +184,11 @@ export function SettingsPage({ data }: { data: PlannerData }) {
 
       <Card className="grid gap-3">
         <h2 className="font-semibold">Your data</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">Everything is stored on this device. Nothing leaves it until you connect an account.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          {signedIn
+            ? 'Stored on this device and backed up to your account.'
+            : 'Everything is stored on this device. Nothing leaves it until you sign in.'}
+        </p>
         <div className="flex flex-wrap gap-2">
           <Button
             onClick={async () => {
@@ -203,6 +206,14 @@ export function SettingsPage({ data }: { data: PlannerData }) {
           >
             <Download size={16} /> Export CSV
           </Button>
+          <Button
+            onClick={() => {
+              const upcoming = tasks.filter((t) => isActive(t) || t.fixedStart !== undefined);
+              download('dayflow-plan.ics', buildIcs(upcoming, profile.timezone), 'text/calendar');
+            }}
+          >
+            <CalendarDays size={16} /> Export plan (.ics)
+          </Button>
           <Button variant="ghost" className="!text-red-700 dark:!text-red-300" onClick={() => setConfirmClear(true)}>
             <Trash2 size={16} /> Delete all data
           </Button>
@@ -211,7 +222,8 @@ export function SettingsPage({ data }: { data: PlannerData }) {
 
       <Sheet open={confirmClear} onClose={() => setConfirmClear(false)} title="Delete everything?">
         <p className="mb-4 text-sm">
-          This removes every task and history entry from this device and can’t be undone. Export a JSON backup first if you might want it back.
+          This removes every task, habit and history entry from this device{signedIn ? ' and from your account' : ''}, and can’t be undone.
+          Export a JSON backup first if you might want it back.{signedIn ? ' Events already added to Google Calendar stay there.' : ''}
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setConfirmClear(false)}>
@@ -220,9 +232,15 @@ export function SettingsPage({ data }: { data: PlannerData }) {
           <Button
             variant="danger"
             onClick={async () => {
-              await clearAllData();
-              setConfirmClear(false);
-              toast('All data deleted.');
+              try {
+                if (signedIn) await deleteCloudData();
+                await clearAllData();
+                toast('All data deleted.');
+              } catch (err) {
+                toast(`Couldn’t delete everything: ${err instanceof Error ? err.message : err}`, { tone: 'error' });
+              } finally {
+                setConfirmClear(false);
+              }
             }}
           >
             Delete everything

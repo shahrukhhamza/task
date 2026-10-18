@@ -13,6 +13,7 @@
   "type": "module",
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
+    "@supabase/supabase-js": "^2.118.0",
     "chrono-node": "^2.10.3",
     "date-fns": "^4.4.0",
     "dexie": "^4.4.6",
@@ -22,9 +23,11 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.4",
+    "recharts": "^3.10.1",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
@@ -35,7 +38,10 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vite-plugin-pwa": "^2.0.0",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "workbox-core": "^7.4.1",
+    "workbox-precaching": "^7.4.1",
+    "workbox-routing": "^7.4.1"
   },
   "private": true
 }

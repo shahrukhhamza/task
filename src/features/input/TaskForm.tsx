@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useId } from 'react';
 import { fieldClass } from '../../components/ui';
+import { useCloud } from '../../store/cloud';
 import type { ParsedTask } from '../../lib/parser';
 import { endOfDayTz, fromLocalInput, MIN, toLocalInput } from '../../lib/time/tz';
 import type { Priority } from '../../lib/types';
@@ -23,6 +24,7 @@ interface TaskFormProps {
 /** Edits one parsed task; used for the review cards and for editing saved tasks. */
 export function TaskForm({ value, onChange, timezone }: TaskFormProps) {
   const id = useId();
+  const calendarConnected = useCloud((s) => s.google === 'connected' && !!s.user);
   const isFixed = value.fixedStart !== undefined;
   const set = (patch: Partial<ParsedTask>) => onChange({ ...value, ...patch });
 
@@ -232,7 +234,9 @@ export function TaskForm({ value, onChange, timezone }: TaskFormProps) {
       </div>
       {value.addToCalendar && (
         <p className="-mt-1 text-xs text-slate-600 dark:text-slate-400">
-          Saved with the task. Calendar sync switches on once you sign in with Google.
+          {calendarConnected
+            ? 'It will appear in your Google Calendar and stay in sync.'
+            : 'Saved with the task. It syncs once you connect Google in Settings; until then, open the task for a calendar link or .ics file.'}
         </p>
       )}
     </div>

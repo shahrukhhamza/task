@@ -27,7 +27,8 @@ export type ParsedCommand =
   | { kind: 'start'; target: string }
   | { kind: 'late'; minutes?: number }
   | { kind: 'next' }
-  | { kind: 'delete'; target: string };
+  | { kind: 'delete'; target: string }
+  | { kind: 'calendar'; target: string };
 
 export type ParseResult =
   | { kind: 'tasks'; tasks: ParsedTask[] }

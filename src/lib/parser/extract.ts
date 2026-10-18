@@ -123,7 +123,11 @@ export function inferCategory(title: string): string | undefined {
 // ---------------------------------------------------------------- calendar flag
 
 export function extractCalendarFlag(input: string): Extraction<boolean> {
-  const m = /\b(?:and\s+)?(?:please\s+)?(?:add|put|save|sync|schedule|pin)\s+(?:it|this|that)?\s*(?:to|on|in|into)\s+(?:my\s+)?(?:google\s+)?calendar\b/i.exec(input);
+  // "add dentist Friday 4pm to my calendar": the request wraps the whole task
+  const wrapped = /^\s*(?:please\s+)?(?:add|put|schedule|save)\s+(.+?)\s+(?:to|on|in|into)\s+(?:my\s+)?(?:google\s+)?calendar[.!]?\s*$/i.exec(input);
+  if (wrapped) return { value: true, text: wrapped[1] };
+
+  const m =/\b(?:and\s+)?(?:please\s+)?(?:add|put|save|sync|schedule|pin)\s+(?:it|this|that)?\s*(?:to|on|in|into)\s+(?:my\s+)?(?:google\s+)?calendar\b/i.exec(input);
   return m ? { value: true, text: blank(input, m) } : { value: undefined, text: input };
 }
 

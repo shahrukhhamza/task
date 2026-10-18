@@ -2,8 +2,7 @@ import { ArrowUp, Mic, MicOff, X } from 'lucide-react';
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../../components/ui';
 import { runCommand, type CommandOutcome } from '../../lib/commandRunner';
-import { addParsedTasks } from '../../lib/db/actions';
-import { db } from '../../lib/db/schema';
+import { addParsedTasks, updateProfile } from '../../lib/db/actions';
 import { parseInput, parseTasksOnly, type ParsedTask } from '../../lib/parser';
 import { useSpeechRecognition, VOICE_LANGUAGES } from '../../lib/speech/useSpeechRecognition';
 import type { Profile } from '../../lib/types';
@@ -208,7 +207,7 @@ export function InputBar({ profile, now }: { profile: Profile; now: number }) {
               Voice
               <select
                 value={profile.voiceLang}
-                onChange={(e) => void db.profile.update('me', { voiceLang: e.target.value, updatedAt: Date.now() })}
+                onChange={(e) => void updateProfile({ voiceLang: e.target.value })}
                 className="rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-xs dark:border-slate-600 dark:bg-slate-800"
                 aria-label="Voice language"
               >

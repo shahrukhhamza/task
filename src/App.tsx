@@ -6,6 +6,7 @@ import { FocusOverlay } from './features/focus/FocusOverlay';
 import { InputBar } from './features/input/InputBar';
 import { TaskSheet } from './features/tasks/TaskSheet';
 import { useData } from './hooks/useData';
+import { initCloud } from './lib/cloud/session';
 import { useShortcuts } from './hooks/useShortcuts';
 import { useTheme } from './lib/theme';
 import { SettingsPage } from './pages/SettingsPage';
@@ -40,6 +41,9 @@ function Shell() {
   const focusTarget = useUi((s) => s.focusTarget);
   useShortcuts();
   useTheme(data.profile.theme);
+  useEffect(() => {
+    void initCloud();
+  }, []);
 
   const focusTask = focusTarget ? data.tasks.find((t) => t.id === focusTarget.taskId) : undefined;
 

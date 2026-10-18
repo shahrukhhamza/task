@@ -1,4 +1,5 @@
-import { completeTask, deleteTask, isActive, pushTask, replanAll, startTask, type Undo } from './db/actions';
+import { useCloud } from '../store/cloud';
+import { completeTask, deleteTask, isActive, pushTask, replanAll, setAddToCalendar, startTask, type Undo } from './db/actions';
 import { db, ensureProfile } from './db/schema';
 import { resolveTarget, type ParsedCommand } from './parser';
 import { nextBlock } from './scheduler';
@@ -11,11 +12,12 @@ export type CommandOutcome =
   | { kind: 'clarify'; question: string; options: Array<{ label: string; run: () => Promise<CommandOutcome> }> }
   | { kind: 'notFound'; message: string; target: string };
 
-const VERB: Record<'push' | 'finish' | 'start' | 'delete', string> = {
+const VERB: Record<'push' | 'finish' | 'start' | 'delete' | 'calendar', string> = {
   push: 'move',
   finish: 'finish',
   start: 'start',
   delete: 'delete',
+  calendar: 'add to your calendar',
 };
 
 async function act(command: Extract<ParsedCommand, { target: string }>, task: Task): Promise<CommandOutcome> {
@@ -27,6 +29,17 @@ async function act(command: Extract<ParsedCommand, { target: string }>, task: Ta
       return { kind: 'done', message: `Started "${task.title}".`, undo: await startTask(task.id) };
     case 'delete':
       return { kind: 'done', message: `Deleted "${task.title}".`, undo: await deleteTask(task.id) };
+    case 'calendar': {
+      const undo = await setAddToCalendar(task.id, true);
+      const connected = useCloud.getState().google === 'connected';
+      return {
+        kind: 'done',
+        message: connected
+          ? `Adding "${task.title}" to Google Calendar.`
+          : `"${task.title}" is marked for your calendar. Connect Google in Settings to sync it, or open the task for a calendar link.`,
+        undo,
+      };
+    }
     case 'push': {
       const undo = await pushTask(task.id, command.to, command.hasTime);
       const when = command.hasTime
