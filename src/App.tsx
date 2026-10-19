@@ -11,6 +11,7 @@ import { AddSheet } from './features/input/AddSheet';
 import { TaskSheet } from './features/tasks/TaskSheet';
 import { VoiceAgent } from './features/voice/VoiceAgent';
 import { useData } from './hooks/useData';
+import { TaskNumbersProvider } from './hooks/useTaskNumbers';
 import { useShortcuts } from './hooks/useShortcuts';
 import { initCloud } from './lib/cloud/session';
 import { useReminders } from './lib/notify';
@@ -52,7 +53,7 @@ function Shell() {
   const focusTask = focusTarget ? data.tasks.find((t) => t.id === focusTarget.taskId) : undefined;
 
   return (
-    <>
+    <TaskNumbersProvider tasks={data.tasks}>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-full focus:bg-surface focus:px-4 focus:py-2">
         Skip to content
       </a>
@@ -96,7 +97,7 @@ function Shell() {
       <TaskSheet tasks={data.tasks} profile={data.profile} now={data.now} risks={data.livePlan.risks} />
       {focusTask && <FocusOverlay key={focusTask.id} task={focusTask} />}
       <Toasts />
-    </>
+    </TaskNumbersProvider>
   );
 }
 

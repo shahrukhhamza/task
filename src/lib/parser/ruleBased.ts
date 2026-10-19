@@ -1,7 +1,7 @@
 import { endOfDayTz, MIN } from '../time/tz';
 import { parseDates } from './chronoTz';
 import { resolveWhen } from './when';
-import { normalizeDayParts } from './spokenTime';
+import { normalizeDayParts, normalizeMeridiems } from './spokenTime';
 import { parseCommand } from './commands';
 import {
   expandDateTags,
@@ -140,7 +140,7 @@ function splitLine(line: string, ctx: ParseContext): string[] {
  * ("about 2 hours", "high priority") are glued back onto the previous task.
  */
 export function parseInput(input: string, ctx: ParseContext): ParseResult {
-  const trimmed = input.trim();
+  const trimmed = normalizeMeridiems(input.trim());
   if (!trimmed) return { kind: 'empty' };
 
   const command = parseCommand(trimmed, ctx);
@@ -150,7 +150,7 @@ export function parseInput(input: string, ctx: ParseContext): ParseResult {
 
 /** Skips command detection, e.g. when "start the report" turns out to be a new task. */
 export function parseTasksOnly(input: string, ctx: ParseContext): ParseResult {
-  const trimmed = input.trim();
+  const trimmed = normalizeMeridiems(input.trim());
   if (!trimmed) return { kind: 'empty' };
 
   const pieces: string[] = [];

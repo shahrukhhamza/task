@@ -19,7 +19,7 @@ describe('voice agent: adding', () => {
   it('"add a meeting from 5 pm to 6 pm" creates the task and says when it is', async () => {
     const turn = await agent().hear('add a meeting from 5 pm to 6 pm');
     expect(turn.tone).toBe('ok');
-    expect(turn.say).toBe('Added “Meeting”, today from 5:00 PM to 6:00 PM.');
+    expect(turn.say).toBe('Added “Meeting” (task 1), today from 5:00 PM to 6:00 PM.');
     const [task] = await live();
     expect(task.title).toBe('Meeting');
     expect(task.fixedStart).toBe(at(10, 19, 17));
@@ -28,7 +28,7 @@ describe('voice agent: adding', () => {
 
   it('"8 AM to 9PM" is a thirteen hour block, and the answer says so', async () => {
     const turn = await agent().hear('I have a meeting from 8 AM to 9PM tomorrow');
-    expect(turn.say).toBe('Added “Meeting”, tomorrow from 8:00 AM to 9:00 PM.');
+    expect(turn.say).toBe('Added “Meeting” (task 1), tomorrow from 8:00 AM to 9:00 PM.');
     const [task] = await live();
     expect(task.fixedEnd! - task.fixedStart!).toBe(13 * 3_600_000);
   });
@@ -158,7 +158,7 @@ describe('voice agent: asking about the day', () => {
     await a.hear('dentist at 4pm');
     await a.hear('gym at 6pm');
     const turn = await a.hear("what's on my schedule today");
-    expect(turn.say).toBe('Today you have Dentist at 4:00 PM and Gym at 6:00 PM.');
+    expect(turn.say).toBe('Today you have task 1, Dentist at 4:00 PM and task 2, Gym at 6:00 PM.');
   });
 
   it('says so when the day is empty', async () => {

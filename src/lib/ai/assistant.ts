@@ -6,6 +6,7 @@ import { callFunction, FunctionError } from '../cloud/client';
 import type { ParseContext } from '../parser';
 import { formatDuration, formatTime } from '../time/tz';
 import type { Task } from '../types';
+import { numberedTasks } from '../taskNumbers';
 import { asUpdate } from '../updateIntent';
 import { PARSE_SCHEMA, toParseResult, type AiParse, type AiParseResult } from './convert';
 import { applySpokenChange, applySpokenTimes } from './guard';
@@ -92,13 +93,13 @@ Rules:
 - Input may be in any language (English, Urdu, Roman Urdu, Hindi, Arabic and more) and may contain voice-typing mistakes; understand the intent.`;
 
 export async function understand(text: string, ctx: ParseContext, existing: Task[]): Promise<AiParseResult> {
-  const titles = existing
-    .filter((t) => !t.deletedAt && ['todo', 'scheduled', 'doing'].includes(t.status))
+  // numbered the way they are on screen, so "task 2" can be answered with target "#2"
+  const titles = numberedTasks(existing)
     .slice(0, 40)
-    .map((t) => `- ${t.title}`)
+    .map((t, i) => `- #${i + 1} ${t.title}`)
     .join('\n');
   const ai = await askJson<AiParse>({
-    system: `${PARSE_RULES}\n${dateContext(ctx)}\nExisting tasks (copy the closest title as a command target):\n${titles || '- (none)'}`,
+    system: `${PARSE_RULES}\n${dateContext(ctx)}\nExisting tasks, numbered as the user sees them (copy the closest title as a command target; when the user says a number such as \"task 2\" or \"number 3\", use target \"#2\" or \"#3\"):\n${titles || '- (none)'}`,
     prompt: text,
     schema: PARSE_SCHEMA,
     temperature: 0.1,

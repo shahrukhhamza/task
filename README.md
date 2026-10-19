@@ -63,6 +63,8 @@ cards → planner.
 - Hands-free: it listens, waits for a pause, acts at once and answers out loud, then listens
   again. "Add a meeting from 5 to 6 pm" creates the task; "remove this" deletes the one you
   were just talking about; "undo" takes it back; "what's on today?" reads your day.
+- Every task wears a small number (soonest first). Say *task 2*, *number 3* or *the second task*:
+  "update task 2 to 7 pm", "delete number 3", "mark task 1 as done".
 - Understands *this / it / that one*, asks "which one?" when two tasks fit (answer "the second
   one" or by name), warns about overlaps, and follows am/pm exactly ("8 AM to 9PM" is 13 hours).
 - Uses Gemini when it's on, the built-in parser otherwise. Spoken answers can be muted.

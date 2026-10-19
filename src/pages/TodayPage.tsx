@@ -1,6 +1,7 @@
 import { ArrowUpRight, Check, Play, Plus, RefreshCw, Sparkles, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { TaskNumber } from '../components/TaskNumber';
 import { Bento, DateBlock, IconButton, Kicker, Segmented, Skeleton } from '../components/ui';
 import { ReconnectBanner } from '../features/account/ReconnectBanner';
 import { useDailyBrief } from '../features/ai/useDailyBrief';
@@ -278,7 +279,10 @@ export function TodayPage({ data }: { data: PlannerData }) {
               <DateBlock top={nextTime[0]} bottom={nextTime[1]} className="!h-16 !w-16" />
               <button type="button" disabled={!next.task} onClick={() => next.task && select(next.task.id)} className="min-w-0 flex-1 text-left">
                 <p className="text-xs font-semibold uppercase tracking-wider opacity-70">{next.start <= now ? 'Happening now' : 'Up next'}</p>
-                <p className="truncate text-xl font-semibold">{next.title}</p>
+                <p className="flex items-center gap-2 text-xl font-semibold">
+                  <TaskNumber id={next.task?.id} className="bg-ink/10" />
+                  <span className="truncate">{next.title}</span>
+                </p>
                 <p className="text-sm font-medium opacity-65">
                   {next.start <= now
                     ? `Until ${formatTime(next.end, tz)}`

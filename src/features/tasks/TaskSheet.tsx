@@ -1,3 +1,4 @@
+import { useTaskNumber } from '../../hooks/useTaskNumbers';
 import { Check, Clock, Pencil, Play, RotateCcw, SkipForward, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Sheet } from '../../components/Sheet';
@@ -37,6 +38,12 @@ interface TaskSheetProps {
 }
 
 /** Details and actions for one task: the two common actions are big, the rest small. */
+/** "Task 2" above the title, the name to say when talking about it. */
+function TaskNumberLabel({ id }: { id: string }) {
+  const n = useTaskNumber(id);
+  return n === undefined ? null : <p className="mb-1 text-sm font-semibold text-muted">Task {n}</p>;
+}
+
 export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
   const selectedId = useUi((s) => s.selectedTaskId);
   const select = useUi((s) => s.select);
@@ -102,6 +109,7 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
       {task && !editing && (
         <div className="grid gap-5">
           <div>
+            <TaskNumberLabel id={task.id} />
             <h2 className={`text-[28px] font-semibold leading-tight ${task.status === 'done' ? 'text-muted line-through' : ''}`}>{task.title}</h2>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {task.status === 'done' && <Chip tone="teal">Done</Chip>}

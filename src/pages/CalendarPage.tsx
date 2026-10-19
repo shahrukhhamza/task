@@ -1,3 +1,4 @@
+import { TaskNumber } from '../components/TaskNumber';
 import { useMemo, useState } from 'react';
 import { Bento, Kicker, Skeleton } from '../components/ui';
 import { DayList } from '../features/plan/DayList';
@@ -115,7 +116,10 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
                       <span className="mt-0.5 text-[10px] font-semibold opacity-80">{weekday(due)}</span>
                     </div>
                     <button type="button" onClick={() => select(task.id)} className="min-w-0 flex-1 text-left">
-                      <span className="block truncate font-semibold">{task.title}</span>
+                      <span className="flex items-center gap-2">
+                        <TaskNumber id={task.id} className="bg-ink/10" />
+                        <span className="truncate font-semibold">{task.title}</span>
+                      </span>
                       <span className="block text-sm font-medium opacity-70">Due {formatDayLabel(due, tz, now).toLowerCase()}{endOfDay ? '' : ` at ${formatTime(due, tz)}`}</span>
                     </button>
                     <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${risk ? 'bg-card-coral' : 'bg-card-lime'}`}>{status}</span>

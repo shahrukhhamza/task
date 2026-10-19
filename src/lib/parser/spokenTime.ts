@@ -91,3 +91,8 @@ export function spokenTimes(raw: string): SpokenTime[] {
   }
   return found;
 }
+
+/** "6 p.m." and "8 A.M." become "6pm" and "8am", before anything strips punctuation and leaves a stray ".m". */
+export function normalizeMeridiems(text: string): string {
+  return text.replace(/\b([ap])\.\s?m\b\.?/gi, (_all, letter: string) => `${letter.toLowerCase()}m`);
+}

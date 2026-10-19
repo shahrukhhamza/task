@@ -8,6 +8,8 @@ import { addHabit } from '../db/habitActions';
 import { db, ensureProfile } from '../db/schema';
 import { describeDays } from '../habits';
 import { parseInput, parseTasksOnly, type ParsedTask, type ParseContext } from '../parser';
+import { normalizeMeridiems } from '../parser/spokenTime';
+import { numberMap, parseNumberRef } from '../taskNumbers';
 import { asUpdate } from '../updateIntent';
 import type { AiParseResult } from '../ai/convert';
 import { formatDayLabel, formatDuration, formatTime, MIN, startOfDayTz } from '../time/tz';
@@ -48,7 +50,7 @@ const ORDINALS: Array<[RegExp, number]> = [
   [/\b(?:fourth|4th|four|4)\b/, 3],
 ];
 
-const clean = (text: string) => text.trim().replace(/[.!?]+$/, '').replace(/\s+/g, ' ');
+const clean = (text: string) => normalizeMeridiems(text.trim()).replace(/[.!?]+$/, '').replace(/\s+/g, ' ');
 
 const list = (items: string[]): string =>
   items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
@@ -85,15 +87,16 @@ export function createVoiceAgent(deps: AgentDeps) {
     const base = startOfDayTz(day === 'today' ? now : now + 24 * 60 * MIN, tz);
     const end = startOfDayTz(base + 36 * 60 * MIN, tz);
     const tasks = (await db.tasks.toArray()).filter(isActive);
+    const numbers = numberMap(tasks);
     const items = tasks
       .flatMap((t) => {
         const slots = t.fixedStart !== undefined ? [{ start: t.fixedStart, end: t.fixedEnd ?? t.fixedStart }] : t.blocks;
-        return slots.filter((s) => s.start >= base && s.start < end && (day === 'tomorrow' || s.end > now)).map((s) => ({ title: t.title, start: s.start }));
+        return slots.filter((s) => s.start >= base && s.start < end && (day === 'tomorrow' || s.end > now)).map((s) => ({ title: t.title, start: s.start, n: numbers.get(t.id) }));
       })
       .sort((a, b) => a.start - b.start);
 
     if (!items.length) return { say: day === 'today' ? 'Nothing else is planned for today.' : 'Nothing is planned for tomorrow yet.', tone: 'info' };
-    const spoken = items.slice(0, 5).map((i) => `${i.title} at ${formatTime(i.start, tz)}`);
+    const spoken = items.slice(0, 5).map((i) => `${i.n ? `task ${i.n}, ` : ''}${i.title} at ${formatTime(i.start, tz)}`);
     const more = items.length > 5 ? `, and ${items.length - 5} more` : '';
     return { say: `${day === 'today' ? 'Today' : 'Tomorrow'} you have ${list(spoken)}${more}.`, tone: 'info' };
   }
@@ -115,6 +118,12 @@ export function createVoiceAgent(deps: AgentDeps) {
   /** Matches "the second one" or "gym" against the choices offered last turn. */
   function pickChoice(text: string, choice: PendingChoice): number {
     const t = text.toLowerCase();
+    // "number 2", "task 3", "#1": the number shown on the task, not the position in this list
+    const wanted = parseNumberRef(t.replace(/^(?:the\s+)?(?:one\s+)?(?:with\s+)?/, ''));
+    if (wanted !== undefined && /(?:#|number|task|no\.?|item)\s*\d|^\d+$/.test(t)) {
+      const byNumber = choice.labels.findIndex((l) => l.endsWith(`(#${wanted})`));
+      if (byNumber >= 0) return byNumber;
+    }
     const byName = choice.labels.findIndex((l) => t.includes(l.toLowerCase()) || l.toLowerCase().includes(t));
     if (byName >= 0) return byName;
     if (/\b(?:last)\b/.test(t)) return choice.labels.length - 1;
@@ -133,13 +142,15 @@ export function createVoiceAgent(deps: AgentDeps) {
     lastUndo = undo;
     const now = deps.now();
     const warn = overlapWarning(created, before);
+    const numbers = numberMap(await db.tasks.toArray());
+    const label = (t: Task) => `“${t.title}”${numbers.has(t.id) ? ` (task ${numbers.get(t.id)})` : ''}`;
 
     if (created.length === 1) {
       const t = created[0];
       const when = whenPhrase(t, tz, now);
-      return { say: `Added “${t.title}”${when ? `, ${when}` : t.fixedStart === undefined ? ` to your day (${formatDuration(t.estimateMin)})` : ''}.${warn}`, tone: 'ok', undo };
+      return { say: `Added ${label(t)}${when ? `, ${when}` : t.fixedStart === undefined ? ` to your day (${formatDuration(t.estimateMin)})` : ''}.${warn}`, tone: 'ok', undo };
     }
-    return { say: `Added ${created.length} tasks: ${list(created.map((t) => `“${t.title}”`))}.${warn}`, tone: 'ok', undo };
+    return { say: `Added ${created.length} tasks: ${list(created.map(label))}.${warn}`, tone: 'ok', undo };
   }
 
   async function act(result: AiParseResult, tz: string, raw: string): Promise<VoiceTurn> {

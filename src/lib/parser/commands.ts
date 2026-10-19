@@ -1,6 +1,7 @@
 import { startOfDayTz } from '../time/tz';
 import { parseDates } from './chronoTz';
 import { parseChange, parseFromMinutes } from './changes';
+import { normalizeMeridiems } from './spokenTime';
 import type { ParseContext, ParsedCommand, TaskChange } from './types';
 
 const WORD_NUM = '(\\d+(?:\\.\\d+)?|an?|one|half an?|half)';
@@ -14,14 +15,15 @@ const quantityToMinutes = (qty: string, unit: string): number => {
 
 const clean = (target: string): string =>
   target
-    .replace(/\b(?:task|please|now|today|for now|already)\b/gi, ' ')
+    // "task" is filler ("delete the gym task") unless a number follows ("task 2", "task two"), which names it
+    .replace(/\b(?:task(?!\s+#?(?:\d|one\b|two\b|three\b|four\b|five\b|six\b|seven\b|eight\b|nine\b|ten\b))|please|now|today|for now|already)\b/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
 const PREFIX = "(?:i(?:'ve|'m|\\s+have|\\s+am|\\s+will|'ll)?\\s+|just\\s+|let'?s\\s+|now\\s+)*";
 
 /** Leading chatter that doesn't change what is being asked: "actually, ...", "can you please ...". */
-const FILLER = /^(?:(?:actually|no|nope|sorry|wait|oops|um|uh|hmm|oh|okay|ok|well|hey|so)[,.!\s]+)+/i;
+const FILLER = /^(?:(?:actually|no|nope|sorry|wait|oops|um|uh|hmm|oh|okay|ok|well|hey|so|but|just|and|then|like|please)[,.!\s]+)+/i;
 const ASKING = /^(?:(?:please|kindly)\s+|(?:can|could|would|will)\s+you\s+(?:please\s+)?|i\s+(?:want|need|would\s+like|wanna)\s+to\s+|i'?d\s+like\s+to\s+)+/i;
 
 const EDIT_VERBS = '(?:update|change|edit|modify|adjust|correct|amend|alter|fix|retime|set)';
@@ -35,7 +37,7 @@ const UPDATE = new RegExp(
 /** "update the meeting from 6 pm to 7 pm", "change it to 7 pm", "reschedule the dentist from 4 to 5". */
 function parseUpdate(lower: string, ctx: ParseContext): ParsedCommand | null {
   const m = UPDATE.exec(lower);
-  if (!m) return null;
+  if (!m) return parseUpdateBare(lower, ctx);
   const [, verb, rawTarget, from, to] = m;
   const isMove = new RegExp(`^${MOVE_VERBS}$`).test(verb);
   const fromTime = from ? parseFromMinutes(from, ctx) : undefined;
@@ -51,6 +53,14 @@ function parseUpdate(lower: string, ctx: ParseContext): ParsedCommand | null {
   // "change the time to 7 pm": "the time" is what changes, not the task's name
   const target = /^(?:time|timing|schedule|date|start time|end time|duration|length)$/.test(clean(rawTarget)) ? '' : clean(rawTarget);
   return { kind: 'update', target, change, soft: verb === 'set' && !/^(?:it|this|that)$/.test(target) ? true : undefined };
+}
+
+/** "update that meeting 6 pm": no "to", the new time just follows the name. */
+function parseUpdateBare(lower: string, ctx: ParseContext): ParsedCommand | null {
+  const m = new RegExp(String.raw`^${EDIT_VERBS}\s+(?:the\s+|my\s+)?(.+?)\s+((?:at\s+)?\d{1,2}(?::\d{2})?\s*(?:am|pm)\b.*|(?:at\s+)?\d{1,2}:\d{2}\b.*)$`).exec(lower);
+  if (!m) return null;
+  const change = parseChange(m[2], ctx);
+  return change ? { kind: 'update', target: clean(m[1]), change } : null;
 }
 
 /** "make the meeting from 5 to 6", "make it 7 pm", "make it 30 minutes", "mark gym as high priority". */
@@ -92,7 +102,7 @@ function parseRename(text: string): ParsedCommand | null {
  * Anything that doesn't match falls through to normal task parsing.
  */
 export function parseCommand(input: string, ctx: ParseContext): ParsedCommand | null {
-  const text = input.trim().replace(/[.!]+$/, '').replace(/\s+/g, ' ').replace(FILLER, '');
+  const text = normalizeMeridiems(input.trim()).replace(/[.!]+$/, '').replace(/\s+/g, ' ').replace(FILLER, '');
   if (!text || text.includes('\n')) return null;
   const lower = text.toLowerCase();
   let m: RegExpExecArray | null;

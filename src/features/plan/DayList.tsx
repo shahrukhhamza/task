@@ -1,4 +1,5 @@
 import { CalendarDays, Check } from 'lucide-react';
+import { TaskNumber } from '../../components/TaskNumber';
 import { completeTask } from '../../lib/db/actions';
 import { formatDuration, formatTime, MIN } from '../../lib/time/tz';
 import { useUi } from '../../store/ui';
@@ -47,6 +48,7 @@ export function DayList({ items, tz, now }: { items: DayItem[]; tz: string; now:
               >
                 <span className="flex items-center gap-2">
                   {item.kind === 'event' && <CalendarDays size={14} className="shrink-0 opacity-60" aria-hidden />}
+                  <TaskNumber id={item.task?.id} className={current ? 'bg-ink/15' : ''} />
                   <span className="truncate text-[15px] font-semibold">{item.title}</span>
                   {current && <span className="shrink-0 rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Now</span>}
                   {missed && <span className="shrink-0 rounded-full bg-card-coral px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink">Missed</span>}

@@ -1,3 +1,4 @@
+import { TaskNumber } from '../../components/TaskNumber';
 import { Check, CheckCircle2, GripVertical, Lock } from 'lucide-react';
 import { useEffect, useMemo, useRef, type KeyboardEvent } from 'react';
 import { layoutLanes } from '../../lib/layout';
@@ -218,6 +219,7 @@ function TimelineItem({ item, style, tz, now }: { item: Item; style: React.CSSPr
         {done && <CheckCircle2 size={14} className="mt-0.5 shrink-0" />}
         <div className="min-w-0 flex-1">
           <div className={`truncate font-medium ${done ? 'line-through' : ''}`}>
+            <TaskNumber id={task?.id} className="mr-1 !h-4 !min-w-4 !rounded-md !px-1 !text-[10px] align-[1px]" />
             {item.title}
             {block && block.chunks > 1 && <span className="ml-1 font-normal opacity-70">{block.chunk}/{block.chunks}</span>}
           </div>

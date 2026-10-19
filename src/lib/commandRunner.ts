@@ -4,6 +4,7 @@ import { completeTask, deleteTask, editTask, isActive, pushTask, replanAll, setA
 import { db, ensureProfile } from './db/schema';
 import { resolveTarget, type ParsedCommand } from './parser';
 import { nextBlock } from './scheduler';
+import { numberedTasks, numberMap, parseNumberRef } from './taskNumbers';
 import { formatDayLabel, formatDuration, formatTime, MIN, minutesOfDay } from './time/tz';
 import type { Task } from './types';
 
@@ -76,11 +77,12 @@ export const isPronounTarget = (target: string): boolean =>
     target.trim(),
   );
 
-function ask(command: Extract<ParsedCommand, { target: string }>, candidates: Task[]): CommandOutcome {
+/** Choices carry their task number, so "number 2" is a valid answer. */
+function ask(command: Extract<ParsedCommand, { target: string }>, candidates: Task[], numbers: Map<string, number>): CommandOutcome {
   return {
     kind: 'clarify',
     question: `Which one do you want to ${VERB[command.kind]}?`,
-    options: candidates.map((task) => ({ label: task.title, run: () => act(command, task) })),
+    options: [...candidates].sort((a, b) => (numbers.get(a.id) ?? Infinity) - (numbers.get(b.id) ?? Infinity)).map((task) => ({ label: numbers.has(task.id) ? `${task.title} (#${numbers.get(task.id)})` : task.title, run: () => act(command, task) })),
   };
 }
 
@@ -117,6 +119,16 @@ export async function runCommand(command: ParsedCommand, opts: RunOptions = {}):
     default: {
       const all = (await db.tasks.toArray()).filter((t) => !t.deletedAt);
       const pool = command.kind === 'delete' ? all.filter((t) => t.status !== 'dropped') : all.filter(isActive);
+      const numbers = numberMap(all);
+      // "task 2", "number 3", "#1", "the second task": a number from the badges on screen
+      const wanted = parseNumberRef(command.target);
+      const named = wanted !== undefined && pool.some((t) => t.title.trim().toLowerCase() === command.target.trim().toLowerCase());
+      if (wanted !== undefined && !named) {
+        const task = numberedTasks(all)[wanted - 1];
+        if (!task) return { kind: 'notFound', target: command.target, message: `There's no task number ${wanted}. You have ${numbers.size}.` };
+        return act(command, task);
+      }
+
       const fromMin = command.kind === 'update' ? command.change.fromMin : undefined;
       // tasks sitting at the time the user said they are at now ("from 6 pm to 7 pm")
       const atThatTime = fromMin === undefined ? [] : pool.filter((t) => t.fixedStart !== undefined && minutesOfDay(t.fixedStart, timezone) % 720 === fromMin % 720);
@@ -125,7 +137,7 @@ export async function runCommand(command: ParsedCommand, opts: RunOptions = {}):
         const inPlay = opts.contextTaskId ? pool.find((t) => t.id === opts.contextTaskId) : undefined;
         if (atThatTime.length === 1) return act(command, atThatTime[0]);
         if (inPlay) return act(command, inPlay);
-        if (atThatTime.length > 1) return ask(command, atThatTime);
+        if (atThatTime.length > 1) return ask(command, atThatTime, numbers);
         return { kind: 'notFound', target: command.target, message: 'Which task do you mean? Tell me its name.' };
       }
       const found = resolveTarget(command.target, pool);
@@ -141,7 +153,7 @@ export async function runCommand(command: ParsedCommand, opts: RunOptions = {}):
       if (found.kind === 'ambiguous') {
         const sameTime = found.candidates.filter((t) => atThatTime.some((a) => a.id === t.id));
         if (sameTime.length === 1) return act(command, sameTime[0]);
-        return ask(command, found.candidates);
+        return ask(command, found.candidates, numbers);
       }
       return act(command, found.task);
     }
