@@ -29,6 +29,8 @@ function stripLeadIn(line: string): string {
   return line
     .replace(/^\s*(?:[-*•]|\d+[.)])\s+/, '')
     .replace(/^\s*(?:please\s+)?(?:(?:remind me to|i (?:need|have|want|must|should|gotta|got) to|need to|don'?t forget to|have to|gotta|to-?do:?|task:?)\s+)+/i, '')
+    // "I have a meeting ...", "I've got an appointment ...": the noun is the task
+    .replace(/^\s*i(?:'ve|\s+have|\s+got|'ve\s+got|\s+have\s+got)\s+(?:an?|the|my|some)\s+(?=\S)/i, '')
     .trim();
 }
 

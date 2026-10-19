@@ -59,13 +59,15 @@ export interface SpeechState {
 }
 
 /** Final phrases are delivered to `onFinal`; the in-progress phrase is exposed as `interim`. */
-export function useSpeechRecognition(lang: string, onFinal: (text: string) => void): SpeechState {
+export function useSpeechRecognition(lang: string, onFinal: (text: string) => void, opts: { ignoreNoSpeech?: boolean } = {}): SpeechState {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState('');
   const [error, setError] = useState<string | null>(null);
   const recognition = useRef<Recognition | null>(null);
   const onFinalRef = useRef(onFinal);
   onFinalRef.current = onFinal;
+  const ignoreNoSpeech = useRef(opts.ignoreNoSpeech ?? false);
+  ignoreNoSpeech.current = opts.ignoreNoSpeech ?? false;
 
   const supported = typeof window !== 'undefined' && !!getCtor();
 
@@ -90,6 +92,8 @@ export function useSpeechRecognition(lang: string, onFinal: (text: string) => vo
     };
     rec.onerror = (e) => {
       if (e.error === 'aborted') return;
+      // a hands-free session just listens again after silence
+      if (e.error === 'no-speech' && ignoreNoSpeech.current) return;
       setError(ERROR_MESSAGES[e.error] ?? `Voice input stopped (${e.error}).`);
     };
     rec.onend = () => {

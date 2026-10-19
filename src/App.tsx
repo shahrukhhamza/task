@@ -9,6 +9,7 @@ import { Skeleton } from './components/ui';
 import { FocusOverlay } from './features/focus/FocusOverlay';
 import { AddSheet } from './features/input/AddSheet';
 import { TaskSheet } from './features/tasks/TaskSheet';
+import { VoiceAgent } from './features/voice/VoiceAgent';
 import { useData } from './hooks/useData';
 import { useShortcuts } from './hooks/useShortcuts';
 import { initCloud } from './lib/cloud/session';
@@ -91,6 +92,7 @@ function Shell() {
 
       <BottomNav />
       <AddSheet profile={data.profile} now={data.now} />
+      <VoiceAgent profile={data.profile} />
       <TaskSheet tasks={data.tasks} profile={data.profile} now={data.now} risks={data.livePlan.risks} />
       {focusTask && <FocusOverlay key={focusTask.id} task={focusTask} />}
       <Toasts />

@@ -7,7 +7,7 @@ import { formatDayLabel, formatDuration, formatTime, MIN } from './time/tz';
 import type { Task } from './types';
 
 export type CommandOutcome =
-  | { kind: 'done'; message: string; undo?: Undo }
+  | { kind: 'done'; message: string; undo?: Undo; taskId?: string }
   | { kind: 'info'; message: string }
   | { kind: 'clarify'; question: string; options: Array<{ label: string; run: () => Promise<CommandOutcome> }> }
   | { kind: 'notFound'; message: string; target: string };
@@ -24,11 +24,11 @@ async function act(command: Extract<ParsedCommand, { target: string }>, task: Ta
   const { timezone } = await ensureProfile();
   switch (command.kind) {
     case 'finish':
-      return { kind: 'done', message: `Marked "${task.title}" as done.`, undo: await completeTask(task.id) };
+      return { kind: 'done', message: `Marked "${task.title}" as done.`, undo: await completeTask(task.id), taskId: task.id };
     case 'start':
-      return { kind: 'done', message: `Started "${task.title}".`, undo: await startTask(task.id) };
+      return { kind: 'done', message: `Started "${task.title}".`, undo: await startTask(task.id), taskId: task.id };
     case 'delete':
-      return { kind: 'done', message: `Deleted "${task.title}".`, undo: await deleteTask(task.id) };
+      return { kind: 'done', message: `Deleted "${task.title}".`, undo: await deleteTask(task.id), taskId: task.id };
     case 'calendar': {
       const undo = await setAddToCalendar(task.id, true);
       const connected = useCloud.getState().google === 'connected';
@@ -38,6 +38,7 @@ async function act(command: Extract<ParsedCommand, { target: string }>, task: Ta
           ? `Adding "${task.title}" to Google Calendar.`
           : `"${task.title}" is marked for your calendar. Connect Google in Settings to sync it, or open the task for a calendar link.`,
         undo,
+        taskId: task.id,
       };
     }
     case 'push': {
@@ -45,13 +46,24 @@ async function act(command: Extract<ParsedCommand, { target: string }>, task: Ta
       const when = command.hasTime
         ? `${formatDayLabel(command.to, timezone, Date.now())} at ${formatTime(command.to, timezone)}`
         : formatDayLabel(command.to, timezone, Date.now());
-      return { kind: 'done', message: `Moved "${task.title}" to ${when.toLowerCase()}.`, undo };
+      return { kind: 'done', message: `Moved "${task.title}" to ${when.toLowerCase()}.`, undo, taskId: task.id };
     }
   }
 }
 
+export interface RunOptions {
+  /** The task the user was just talking about, so "delete this" and "mark it done" know what they mean. */
+  contextTaskId?: string;
+}
+
+/** "this", "it", "that one", "the last one": words that point at the task in play instead of naming one. */
+export const isPronounTarget = (target: string): boolean =>
+  /^(?:this|that|it|these|those)(?:\s+(?:one|task|meeting|event|appointment|reminder))?$|^(?:the\s+)?(?:last|latest|same|new|previous)(?:\s+(?:one|task|meeting))?$/i.test(
+    target.trim(),
+  );
+
 /** Resolves the command's target against existing tasks, asking when it is ambiguous. */
-export async function runCommand(command: ParsedCommand): Promise<CommandOutcome> {
+export async function runCommand(command: ParsedCommand, opts: RunOptions = {}): Promise<CommandOutcome> {
   const { timezone } = await ensureProfile();
 
   switch (command.kind) {
@@ -83,6 +95,11 @@ export async function runCommand(command: ParsedCommand): Promise<CommandOutcome
     default: {
       const all = (await db.tasks.toArray()).filter((t) => !t.deletedAt);
       const pool = command.kind === 'delete' ? all.filter((t) => t.status !== 'dropped') : all.filter(isActive);
+      if (isPronounTarget(command.target)) {
+        const inPlay = opts.contextTaskId ? pool.find((t) => t.id === opts.contextTaskId) : undefined;
+        if (inPlay) return act(command, inPlay);
+        return { kind: 'notFound', target: command.target, message: 'Which task do you mean? Tell me its name.' };
+      }
       const found = resolveTarget(command.target, pool);
 
       if (found.kind === 'none') {

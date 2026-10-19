@@ -1,4 +1,4 @@
-import { CalendarDays, Home, Plus, Settings, Sparkles, TrendingUp } from 'lucide-react';
+import { CalendarDays, Home, Mic, Plus, Settings, Sparkles, TrendingUp } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAiAvailable } from '../lib/ai/assistant';
 import { useUi } from '../store/ui';
@@ -13,6 +13,7 @@ export const NAV_ITEMS = [
 /** Desktop navigation: brand, sections, the main action, and the assistant's status. */
 export function Sidebar() {
   const openAdd = useUi((s) => s.openAdd);
+  const openVoice = useUi((s) => s.openVoice);
   const ai = useAiAvailable();
 
   return (
@@ -25,10 +26,18 @@ export function Sidebar() {
       <button
         type="button"
         onClick={() => openAdd()}
-        className="mb-8 flex h-11 items-center justify-center gap-2 rounded-full bg-fg font-medium text-app transition hover:opacity-90 dark:bg-card-lime dark:text-ink"
+        className="mb-2 flex h-11 items-center justify-center gap-2 rounded-full bg-fg font-medium text-app transition hover:opacity-90 dark:bg-card-lime dark:text-ink"
       >
         <Plus size={20} strokeWidth={2.6} /> New task
         <kbd className="ml-1 rounded-md bg-app/15 px-1.5 text-xs font-medium dark:bg-ink/10">/</kbd>
+      </button>
+      <button
+        type="button"
+        onClick={openVoice}
+        className="mb-8 flex h-11 items-center justify-center gap-2 rounded-full border border-line font-medium text-fg transition hover:bg-surface-2"
+      >
+        <Mic size={18} strokeWidth={2.4} /> Talk to Dayflow
+        <kbd className="ml-1 rounded-md bg-surface-2 px-1.5 text-xs font-medium text-muted">V</kbd>
       </button>
 
       <nav aria-label="Main" className="grid gap-1">
