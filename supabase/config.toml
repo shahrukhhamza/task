@@ -17,3 +17,7 @@ verify_jwt = false
 # Gemini proxy; called by the browser with the user's session token.
 [functions.ai]
 verify_jwt = true
+
+# "Send me a test notification" button; called by the browser with the user's session token.
+[functions.push-test]
+verify_jwt = true

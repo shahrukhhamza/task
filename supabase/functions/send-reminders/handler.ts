@@ -1,16 +1,19 @@
-// Push reminders shortly before each planned block, even when Dayflow is closed.
+// Push notifications while Dayflow is closed: a reminder shortly before each planned block,
+// a morning plan, deadline heads-ups and an evening wrap-up.
 // Called by pg_cron every minute with the x-cron-secret header.
 
 import { corsHeaders, json, safeEqual } from '../_shared/http.ts';
 import { sendPush, type PushSubscriptionKeys, type VapidKeys } from '../_shared/webpush.ts';
-import { dueReminders, reminderPayload, type ReminderTask } from '../_shared/reminders.ts';
+import { dueNotices, dueReminders, reminderPayload, type Notice, type PushPrefs, type ReminderTask } from '../_shared/reminders.ts';
 
-export { dueReminders, reminderPayload };
+export { dueNotices, dueReminders, reminderPayload };
 
 export interface ReminderTarget {
   userId: string;
   timezone: string;
   leadMin: number;
+  /** Morning plan, deadline alerts and evening wrap-up; all off when missing. */
+  prefs?: Partial<PushPrefs>;
   subscriptions: PushSubscriptionKeys[];
   tasks: ReminderTask[];
 }
@@ -38,14 +41,17 @@ export function createReminderHandler(deps: ReminderDeps) {
     const result = { sent: 0, gone: 0, failed: 0 };
     for (const target of await deps.listTargets()) {
       if (!target.subscriptions.length) continue;
-      const due = dueReminders(target, now);
-      if (!due.length) continue;
-      const already = await deps.sentKeys(target.userId, due.map((d) => d.key));
-      const fresh = due.filter((d) => !already.has(d.key));
+      const notices: Notice[] = [
+        ...dueReminders(target, now).map((r) => ({ key: r.key, ...reminderPayload(r, target.timezone, now) })),
+        ...dueNotices(target, now),
+      ];
+      if (!notices.length) continue;
+      const already = await deps.sentKeys(target.userId, notices.map((n) => n.key));
+      const fresh = notices.filter((n) => !already.has(n.key));
       if (!fresh.length) continue;
 
-      for (const reminder of fresh) {
-        const payload = reminderPayload(reminder, target.timezone, now);
+      for (const notice of fresh) {
+        const payload = { title: notice.title, body: notice.body, tag: notice.tag, url: notice.url };
         for (const sub of target.subscriptions) {
           try {
             const { outcome } = await sendPush(deps.fetch, sub, payload, deps.vapid);

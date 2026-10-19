@@ -116,6 +116,14 @@ export interface Profile {
   remindersEnabled: boolean;
   /** Minutes before a block starts. */
   reminderLeadMin: number;
+  /** A morning plan push at `pushMorningTime` (local "HH:MM"). */
+  pushMorning: boolean;
+  pushMorningTime: string;
+  /** A heads-up an hour before a deadline that has a set time. */
+  pushDeadlines: boolean;
+  /** An evening wrap-up push at `pushEveningTime`. */
+  pushEvening: boolean;
+  pushEveningTime: string;
   updatedAt: number;
   syncState?: SyncState;
 }
@@ -190,5 +198,10 @@ export const DEFAULT_PROFILE: Profile = {
   emailWeekly: true,
   remindersEnabled: false,
   reminderLeadMin: 5,
+  pushMorning: true,
+  pushMorningTime: '08:00',
+  pushDeadlines: true,
+  pushEvening: true,
+  pushEveningTime: '20:30',
   updatedAt: 0,
 };

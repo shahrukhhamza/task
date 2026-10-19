@@ -54,7 +54,18 @@ cards → planner.
 - Morning summary with carried-over tasks and a "can I finish everything?" check.
 - Upcoming 7 days and a deadline panel; habits with streaks; evening mood/energy check-in.
 - Weekly "where did my time go" report with charts (each with a table view).
-- Reminders before each block: in-app, and via Web Push when the app is closed.
+- Push notifications on your phone, even with the app closed (needs the free Supabase setup,
+  see [docs/PHONE_PUSH.md](docs/PHONE_PUSH.md)): a reminder before each task, a morning plan,
+  deadline alerts and an evening wrap-up, each switchable in Settings → Notifications, with a
+  "Send a test to this phone" button.
+
+**Voice assistant** (*Talk to Dayflow*: sidebar, the floating mic on phones, or press `V`)
+- Hands-free: it listens, waits for a pause, acts at once and answers out loud, then listens
+  again. "Add a meeting from 5 to 6 pm" creates the task; "remove this" deletes the one you
+  were just talking about; "undo" takes it back; "what's on today?" reads your day.
+- Understands *this / it / that one*, asks "which one?" when two tasks fit (answer "the second
+  one" or by name), warns about overlaps, and follows am/pm exactly ("8 AM to 9PM" is 13 hours).
+- Uses Gemini when it's on, the built-in parser otherwise. Spoken answers can be muted.
 
 **Smart assistant (optional, Gemini free tier)**
 - Understands free-form input in any language (English, Urdu, Roman Urdu, Hindi…), including
@@ -88,7 +99,7 @@ src/
   sw.ts              service worker: offline shell, push, notification clicks
 supabase/
   migrations/        0001 schema + RLS, 0002 pg_cron jobs
-  functions/         google-calendar, daily-summary, send-reminders (+ _shared pure code)
+  functions/         google-calendar, daily-summary, send-reminders, push-test, ai (+ _shared pure code)
 tests/               Vitest suites (parser, scheduler, sync, SQL/RLS, functions, email, push)
 docs/SETUP.md        free credentials and deployment, step by step
 ```
@@ -120,7 +131,7 @@ Backend: one free Supabase project (database, auth, Edge Functions, pg_cron). Fu
 
 ## How it was verified
 
-- 246 automated tests: parser (70+ sentences) and commands, scheduler, timezone/DST, sync
+- 331 automated tests: parser (70+ sentences) and commands, scheduler, timezone/DST, sync
   conflicts and offline edits, the SQL migrations and row level security in an embedded
   Postgres (PGlite), all three Edge Function handlers against mocked Google/Resend/push
   services, email rendering, and Web Push encryption against the RFC 8291 test vector.

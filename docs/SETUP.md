@@ -59,7 +59,8 @@ products.
      npx supabase link --project-ref <your-ref>
      npx supabase db push        # applies 0001 and 0002; run this after step 6 instead if you use the CLI
      ```
-   Don't run `0002_cron.sql` yet; it needs the secrets from step 6.
+   Also run `0003_push_prefs.sql` the same way (the notification settings). Don't run
+   `0002_cron.sql` yet; it needs the secrets from step 6.
 
 ## 2. Google sign-in and Calendar (OAuth client ID)
 
@@ -102,7 +103,7 @@ products.
 ## 4. Push reminder keys (VAPID)
 
 ```bash
-npx web-push generate-vapid-keys
+npm run vapid
 ```
 
 Copy the **Public Key** to both `VITE_VAPID_PUBLIC_KEY` (in `.env.local`) and
@@ -120,7 +121,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"   # UNS
 
 1. Copy `supabase/functions/.env.example` to `supabase/functions/.env` (git-ignored) and
    fill in everything from steps 2–5. `APP_URL` is `http://localhost:5173` for now.
-2. Push the secrets and deploy the three functions:
+2. Push the secrets and deploy the functions:
    ```bash
    npx supabase login                       # if you haven't already
    npx supabase link --project-ref <your-ref>
@@ -128,6 +129,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"   # UNS
    npx supabase functions deploy google-calendar
    npx supabase functions deploy daily-summary --no-verify-jwt
    npx supabase functions deploy send-reminders --no-verify-jwt
+   npx supabase functions deploy push-test
    npx supabase functions deploy ai            # only if you set GEMINI_API_KEY
    ```
    With `GEMINI_API_KEY` set on the server, signed-in users get the smart assistant without
@@ -160,7 +162,8 @@ Then check:
 - **Account & sync** shows "Up to date".
 - **Google Calendar** shows "Connected"; your events appear as fixed blocks on Today.
 - **Nightly summary email → Send test email now** delivers to your inbox.
-- **Reminders → Turn reminders on → Send a test** shows a notification.
+- **Notifications → Turn notifications on → Send a test** shows a notification. For
+  notifications on your phone, follow [PHONE_PUSH.md](PHONE_PUSH.md).
 
 ## 9. Deploy the app
 

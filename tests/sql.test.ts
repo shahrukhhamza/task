@@ -30,6 +30,7 @@ beforeAll(async () => {
     grant execute on function auth.uid() to authenticated;
   `);
   await pg.exec(readFileSync('supabase/migrations/0001_init.sql', 'utf8'));
+  await pg.exec(readFileSync('supabase/migrations/0003_push_prefs.sql', 'utf8'));
   // Supabase grants table access to authenticated by default; RLS does the restricting
   await pg.exec('grant all on all tables in schema public to authenticated;');
   await pg.exec(`insert into auth.users values ('${ALICE}', 'alice@example.com'), ('${BOB}', 'bob@example.com');`);
@@ -49,6 +50,19 @@ describe('sign-up', () => {
     expect(rows[0].email_recipient).toBe('alice@example.com');
     // epoch, so settings changed on a device win over these defaults on first sync
     expect(new Date(rows[0].updated_at).getTime()).toBe(0);
+  });
+});
+
+describe('push preferences', () => {
+  it('start on, at sensible times', async () => {
+    const { rows } = await pg.query(
+      `select push_morning, push_morning_time, push_deadlines, push_evening, push_evening_time from public.profiles where id = '${ALICE}'`,
+    );
+    expect(rows).toEqual([{ push_morning: true, push_morning_time: '08:00', push_deadlines: true, push_evening: true, push_evening_time: '20:30' }]);
+  });
+
+  it('reject a time that is not HH:MM', async () => {
+    await expect(pg.exec(`update public.profiles set push_morning_time = '8am' where id = '${ALICE}'`)).rejects.toThrow();
   });
 });
 

@@ -30,24 +30,37 @@ Deno.serve(
 
       const { data: profiles } = await admin
         .from('profiles')
-        .select('id, timezone, reminders_enabled, reminder_lead_min')
+        .select('id, timezone, reminders_enabled, reminder_lead_min, push_morning, push_morning_time, push_deadlines, push_evening, push_evening_time')
         .in('id', userIds)
         .eq('reminders_enabled', true);
       const enabled = new Map((profiles ?? []).map((p) => [p.id as string, p]));
       if (!enabled.size) return [];
 
-      const { data: tasks } = await admin
+      const ids = [...enabled.keys()];
+      const taskColumns = 'user_id, id, title, status, blocks, fixed_start, fixed_end, due_at, completed_at';
+      const { data: open } = await admin.from('tasks').select(taskColumns).in('user_id', ids).in('status', ['todo', 'scheduled', 'doing']).is('deleted_at', null);
+      // finished in the last two days: the evening wrap-up counts what got done today
+      const { data: finished } = await admin
         .from('tasks')
-        .select('user_id, id, title, status, blocks, fixed_start, fixed_end')
-        .in('user_id', [...enabled.keys()])
-        .in('status', ['todo', 'scheduled', 'doing'])
+        .select(taskColumns)
+        .in('user_id', ids)
+        .eq('status', 'done')
+        .gte('completed_at', new Date(Date.now() - 2 * 86_400_000).toISOString())
         .is('deleted_at', null);
+      const tasks = [...(open ?? []), ...(finished ?? [])];
 
       return [...enabled.values()].map(
         (p): ReminderTarget => ({
           userId: p.id,
           timezone: p.timezone,
           leadMin: p.reminder_lead_min ?? 5,
+          prefs: {
+            morning: p.push_morning ?? true,
+            morningTime: p.push_morning_time ?? '08:00',
+            deadlines: p.push_deadlines ?? true,
+            evening: p.push_evening ?? true,
+            eveningTime: p.push_evening_time ?? '20:30',
+          },
           subscriptions: (subs ?? []).filter((s) => s.user_id === p.id).map((s) => ({ endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth })),
           tasks: (tasks ?? [])
             .filter((t) => t.user_id === p.id)
@@ -58,6 +71,8 @@ Deno.serve(
               blocks: (t.blocks ?? []) as ReminderTarget['tasks'][number]['blocks'],
               fixedStart: ms(t.fixed_start),
               fixedEnd: ms(t.fixed_end),
+              dueAt: ms(t.due_at),
+              completedAt: ms(t.completed_at),
             })),
         }),
       );

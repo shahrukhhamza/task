@@ -93,7 +93,7 @@ export function SettingsPage({ data }: { data: PlannerData }) {
     { id: 'account', title: 'Account & sync', desc: signedIn ? 'Signed in' : 'Local only', icon: UserRound, tone: 'bg-card-sky' },
     { id: 'ai', title: 'Smart assistant', desc: aiOn ? 'On · Gemini' : 'Off', icon: Sparkles, tone: 'bg-card-lilac' },
     { id: 'day', title: 'Your day', desc: `${toTime(profile.workStart)} – ${toTime(profile.workEnd)}`, icon: Sun, tone: 'bg-card-lime' },
-    { id: 'reminders', title: 'Reminders', desc: profile.remindersEnabled ? 'On' : 'Off', icon: Bell, tone: 'bg-card-sun' },
+    { id: 'reminders', title: 'Notifications', desc: profile.remindersEnabled ? 'On' : 'Off', icon: Bell, tone: 'bg-card-sun' },
     { id: 'email', title: 'Nightly email', desc: profile.emailEnabled ? `At ${profile.emailTime}` : 'Off', icon: Mail, tone: 'bg-card-coral' },
     { id: 'look', title: 'Look & voice', desc: profile.theme === 'system' ? 'Auto theme' : profile.theme === 'dark' ? 'Dark theme' : 'Light theme', icon: Palette, tone: 'bg-card-cream' },
     { id: 'data', title: 'Your data', desc: 'Export or delete', icon: Database, tone: 'bg-card-mist' },
