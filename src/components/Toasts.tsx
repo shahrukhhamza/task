@@ -16,7 +16,7 @@ export function Toasts() {
         <div
           key={t.id}
           className={`rise pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-full py-2.5 pl-5 pr-2 text-sm font-medium shadow-xl ${
-            t.tone === 'error' ? 'bg-card-coral text-ink' : 'bg-ink text-white ring-1 ring-white/10'
+            t.tone === 'error' ? 'bg-card-coral text-ink' : 'bg-ink text-white ring-1 ring-white/10 dark:bg-surface-2 dark:ring-line'
           }`}
         >
           <span className="flex-1 py-1">{t.message}</span>

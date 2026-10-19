@@ -310,7 +310,7 @@ export function SettingsPage({ data }: { data: PlannerData }) {
       </header>
 
       {error && (
-        <p role="alert" className="mb-4 rounded-[20px] bg-card-coral p-4 text-sm font-medium text-ink">
+        <p role="alert" className="tint mb-4 rounded-[20px] bg-card-coral p-4 text-sm font-medium text-ink">
           {error}
         </p>
       )}

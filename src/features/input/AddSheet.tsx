@@ -200,20 +200,20 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
           </form>
 
           {speech.error && (
-            <p role="alert" className="rounded-2xl bg-card-coral p-3 text-sm font-medium text-ink">
+            <p role="alert" className="tint rounded-2xl bg-card-coral p-3 text-sm font-medium text-ink">
               {speech.error}
             </p>
           )}
 
           {pending?.kind === 'reply' && (
-            <div role="status" className="flex gap-3 rounded-2xl bg-card-lilac p-4 text-ink">
+            <div role="status" className="tint flex gap-3 rounded-2xl bg-card-lilac p-4 text-ink">
               <Sparkles size={18} className="mt-0.5 shrink-0" />
               <p className="font-medium">{pending.text}</p>
             </div>
           )}
 
           {pending?.kind === 'clarify' && (
-            <div role="alert" className="grid gap-2 rounded-2xl bg-card-sun p-4 text-ink">
+            <div role="alert" className="tint grid gap-2 rounded-2xl bg-card-sun p-4 text-ink">
               <p className="font-semibold">{pending.question}</p>
               <div className="flex flex-wrap gap-2">
                 {pending.options.map((o) => (
@@ -225,7 +225,7 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
             </div>
           )}
           {pending?.kind === 'notFound' && (
-            <div role="alert" className="flex flex-wrap items-center gap-3 rounded-2xl bg-card-sun p-4 text-ink">
+            <div role="alert" className="tint flex flex-wrap items-center gap-3 rounded-2xl bg-card-sun p-4 text-ink">
               <p className="flex-1 font-medium">{pending.message}</p>
               <button
                 type="button"
@@ -246,7 +246,7 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
           )}
 
           {habitPreview ? (
-            <div aria-live="polite" className="rounded-2xl bg-card-lime p-3 text-ink">
+            <div aria-live="polite" className="tint rounded-2xl bg-card-lime p-3 text-ink">
               <p className="font-semibold">New habit: {habitPreview.title}</p>
               <p className="text-sm font-medium opacity-70">{describeDays(habitPreview.days)}</p>
             </div>

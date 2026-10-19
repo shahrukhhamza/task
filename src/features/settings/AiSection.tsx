@@ -43,7 +43,7 @@ export function AiSection() {
 
   return (
     <div className="grid gap-4">
-      <div className="relative overflow-hidden rounded-[28px] bg-card-lilac p-6 text-ink">
+      <div className="tint relative overflow-hidden rounded-[28px] bg-card-lilac p-6 text-ink">
         <div aria-hidden className="absolute -right-10 -top-10 h-40 w-40 rounded-full border-[22px] border-ink/[0.06]" />
         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white">
           <Sparkles size={20} />
@@ -77,7 +77,7 @@ export function AiSection() {
                 ]}
               />
             </div>
-            {ai.error && <p className="rounded-2xl bg-card-coral p-3 text-sm font-medium text-ink">{ai.error}</p>}
+            {ai.error && <p className="tint rounded-2xl bg-card-coral p-3 text-sm font-medium text-ink">{ai.error}</p>}
             <Button size="sm" variant="ghost" className="justify-self-start" onClick={() => ai.update({ key: '', model: '', enabled: false })}>
               Remove key from this device
             </Button>

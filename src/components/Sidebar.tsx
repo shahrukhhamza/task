@@ -25,10 +25,10 @@ export function Sidebar() {
       <button
         type="button"
         onClick={() => openAdd()}
-        className="mb-8 flex h-11 items-center justify-center gap-2 rounded-full bg-fg font-medium text-app transition hover:opacity-90"
+        className="mb-8 flex h-11 items-center justify-center gap-2 rounded-full bg-fg font-medium text-app transition hover:opacity-90 dark:bg-card-lime dark:text-ink"
       >
         <Plus size={20} strokeWidth={2.6} /> New task
-        <kbd className="ml-1 rounded-md bg-app/15 px-1.5 text-xs font-medium">/</kbd>
+        <kbd className="ml-1 rounded-md bg-app/15 px-1.5 text-xs font-medium dark:bg-ink/10">/</kbd>
       </button>
 
       <nav aria-label="Main" className="grid gap-1">
@@ -55,7 +55,7 @@ export function Sidebar() {
 
       <Link
         to="/settings?section=ai"
-        className={`mt-auto flex items-center gap-3 rounded-[20px] p-3.5 text-sm transition ${ai ? 'bg-card-lilac text-ink' : 'bg-surface-2 text-fg hover:brightness-95'}`}
+        className={`mt-auto flex items-center gap-3 rounded-[20px] p-3.5 text-sm transition ${ai ? 'tint bg-card-lilac text-ink' : 'bg-surface-2 text-fg hover:brightness-95'}`}
       >
         <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${ai ? 'bg-ink text-white' : 'bg-surface-2'}`}>
           <Sparkles size={17} />

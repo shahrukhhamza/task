@@ -129,9 +129,9 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
             </div>
           )}
 
-          {risk && <p className="rounded-[20px] bg-card-sun p-4 text-sm font-medium text-ink">{risk.message}</p>}
+          {risk && <p className="tint rounded-[20px] bg-card-sun p-4 text-sm font-medium text-ink">{risk.message}</p>}
           {learned !== undefined && learned !== task.estimateMin && (
-            <p className="rounded-[20px] bg-card-lilac p-4 text-sm font-medium text-ink">
+            <p className="tint rounded-[20px] bg-card-lilac p-4 text-sm font-medium text-ink">
               Planned as {formatDuration(learned)}: your {task.category} tasks usually take {learned > task.estimateMin ? 'longer' : 'less'} than you estimate.
             </p>
           )}
@@ -152,7 +152,7 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
               <button
                 type="button"
                 onClick={() => run(() => completeTask(task.id), `Done: “${task.title}”. Nice.`)}
-                className={`flex h-14 items-center justify-center gap-2 rounded-full bg-fg font-semibold text-app ${task.fixedStart !== undefined ? 'col-span-2' : ''}`}
+                className={`flex h-14 items-center justify-center gap-2 rounded-full bg-fg font-semibold text-app ${task.fixedStart !== undefined ? 'col-span-2 dark:bg-card-lime dark:text-ink' : 'dark:bg-surface-2 dark:text-fg dark:ring-1 dark:ring-line'}`}
               >
                 <Check size={18} strokeWidth={3} /> Done
               </button>

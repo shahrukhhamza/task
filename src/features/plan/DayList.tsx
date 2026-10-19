@@ -35,7 +35,7 @@ export function DayList({ items, tz, now }: { items: DayItem[]; tz: string; now:
 
         return (
           <li key={item.key}>
-            <div className={`group flex items-center gap-3 rounded-[20px] px-3 py-3 transition ${current ? 'bg-card-lime text-ink' : 'hover:bg-surface-2'} ${missed ? 'opacity-60' : ''}`}>
+            <div className={`group flex items-center gap-3 rounded-[20px] px-3 py-3 transition ${current ? 'tint bg-card-lime text-ink' : 'hover:bg-surface-2'} ${missed ? 'opacity-60' : ''}`}>
               <span className={`h-10 w-1.5 shrink-0 rounded-full ${item.kind === 'event' ? 'bg-fg/20' : (BAR[category] ?? 'bg-card-mist')}`} aria-hidden />
 
               <button

@@ -185,3 +185,52 @@ html.dark {
   --chart-axis: #9b9ba3;
   --chart-surface: #0f0f11;
 }
+
+/*
+ * Dark mode for the colourful cards. Light pastel blocks look harsh on black, so in
+ * dark mode a "tint" card becomes a near-black surface washed with its own colour and
+ * outlined in it; dark buttons inside take the card's colour, white chips turn translucent.
+ */
+.tint.bg-card-lime { --tone: 182 224 140; }
+.tint.bg-card-cream { --tone: 246 238 207; }
+.tint.bg-card-sky { --tone: 147 192 248; }
+.tint.bg-card-coral { --tone: 243 154 120; }
+.tint.bg-card-sun { --tone: 247 215 102; }
+.tint.bg-card-mist { --tone: 236 235 232; }
+.tint.bg-card-lilac { --tone: 205 189 246; }
+
+html.dark .tint {
+  background-color: #0f0f11;
+  background-image:
+    radial-gradient(120% 140% at 0% 0%, rgb(var(--tone) / 0.2) 0%, rgb(var(--tone) / 0.07) 55%, rgb(var(--tone) / 0.03) 100%);
+  box-shadow: inset 0 0 0 1px rgb(var(--tone) / 0.22);
+  color: var(--app-fg);
+}
+html.dark .tint .text-ink,
+html.dark .tint.text-ink {
+  color: var(--app-fg);
+}
+/* strong buttons, date blocks and progress fills take the card's colour */
+html.dark .tint .bg-ink {
+  background-color: rgb(var(--tone));
+  color: #0a0a0a;
+}
+html.dark .tint .bg-ink.text-white,
+html.dark .tint .bg-ink .text-white {
+  color: #0a0a0a;
+}
+/* chips and tracks that are white on a pastel card become translucent */
+html.dark .tint [class*='bg-white'] {
+  background-color: rgb(255 255 255 / 0.08);
+  color: var(--app-fg);
+}
+html.dark .tint [class*='bg-ink/'] {
+  background-color: rgb(255 255 255 / 0.1);
+}
+html.dark .tint [class*='border-ink'] {
+  border-color: rgb(var(--tone) / 0.14);
+}
+/* small solid pastel chips inside a tinted card stay pastel, so they keep dark text */
+html.dark .tint [class*='bg-card-']:not(.tint) {
+  color: #0a0a0a;
+}

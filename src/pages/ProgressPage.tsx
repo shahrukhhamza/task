@@ -142,7 +142,7 @@ export default function ProgressPage({ data }: { data: PlannerData }) {
       </header>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-        <div className="col-span-2 rounded-[24px] bg-card-lime p-5 text-ink lg:col-span-1">
+        <div className="tint col-span-2 rounded-[24px] bg-card-lime p-5 text-ink lg:col-span-1">
           <p className="text-sm font-medium opacity-70">Average day score</p>
           <p className="mt-2 text-5xl font-semibold tracking-tight">{w.averageScore === null ? '—' : `${w.averageScore}%`}</p>
           <p className="mt-2 text-sm font-medium opacity-75">{words.mood}</p>

@@ -62,7 +62,7 @@ export function BreakDown({ task, onDone }: { task: Task; onDone: () => void }) 
   }
 
   return (
-    <div className="grid gap-3 rounded-[22px] bg-card-lilac p-4 text-ink">
+    <div className="tint grid gap-3 rounded-[22px] bg-card-lilac p-4 text-ink">
       <p className="flex items-center gap-2 font-semibold">
         <Sparkles size={16} /> Suggested steps
       </p>

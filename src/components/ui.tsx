@@ -5,7 +5,7 @@ import type { ComponentProps, ReactNode } from 'react';
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'ink';
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-fg text-app hover:opacity-90',
+  primary: 'bg-fg text-app hover:opacity-90 dark:bg-card-lime dark:text-ink',
   ink: 'bg-ink text-white hover:bg-black',
   secondary: 'bg-surface-2 text-fg hover:brightness-95 dark:hover:brightness-125',
   ghost: 'text-fg hover:bg-surface-2',
@@ -31,7 +31,7 @@ export function Button({ variant = 'secondary', size = 'md', className = '', ...
 /** The black round icon button from the bento cards. */
 export function IconButton({ label, children, className = '', tone = 'ink', size = 44, ...rest }: ComponentProps<'button'> & { label: string; tone?: 'ink' | 'white' | 'soft'; size?: number }) {
   const tones = {
-    ink: 'bg-ink text-white hover:bg-black',
+    ink: 'bg-ink text-white hover:bg-black dark:bg-fg dark:text-app dark:hover:opacity-90',
     white: 'bg-white text-ink hover:bg-white/85',
     soft: 'bg-surface-2 text-fg hover:brightness-95 dark:hover:brightness-125',
   };
@@ -54,13 +54,13 @@ export function IconButton({ label, children, className = '', tone = 'ink', size
 export type BentoTone = 'lime' | 'cream' | 'sky' | 'coral' | 'sun' | 'mist' | 'lilac' | 'surface';
 
 const BENTO: Record<BentoTone, string> = {
-  lime: 'bg-card-lime text-ink',
-  cream: 'bg-card-cream text-ink',
-  sky: 'bg-card-sky text-ink',
-  coral: 'bg-card-coral text-ink',
-  sun: 'bg-card-sun text-ink',
-  mist: 'bg-card-mist text-ink',
-  lilac: 'bg-card-lilac text-ink',
+  lime: 'tint bg-card-lime text-ink',
+  cream: 'tint bg-card-cream text-ink',
+  sky: 'tint bg-card-sky text-ink',
+  coral: 'tint bg-card-coral text-ink',
+  sun: 'tint bg-card-sun text-ink',
+  mist: 'tint bg-card-mist text-ink',
+  lilac: 'tint bg-card-lilac text-ink',
   surface: 'bg-surface text-fg',
 };
 
@@ -106,7 +106,7 @@ export function Chip({ children, tone = 'neutral', title }: { children: ReactNod
 /** Black pill with a white active segment ("Weekly | Monthly"). */
 export function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: Array<{ value: T; label: string }>; onChange: (v: T) => void; label: string }) {
   return (
-    <div role="group" aria-label={label} className="inline-flex rounded-full bg-ink p-1">
+    <div role="group" aria-label={label} className="inline-flex rounded-full bg-ink p-1 dark:bg-surface-2 dark:ring-1 dark:ring-line">
       {options.map((o) => (
         <button
           key={o.value}
