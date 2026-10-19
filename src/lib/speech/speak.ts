@@ -10,6 +10,8 @@ export interface VoicePrefs {
   voiceURI?: string;
   /** 0.7 (slow) to 1.4 (fast). */
   rate: number;
+  /** Prefer a voice stored on this device: it starts talking at once, online voices need a moment. */
+  instant?: boolean;
 }
 
 const PREFS_KEY = 'dayflow-assistant-voice';
@@ -19,7 +21,7 @@ export function loadVoicePrefs(): VoicePrefs {
   try {
     const raw = JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') as Partial<VoicePrefs>;
     const rate = typeof raw.rate === 'number' ? Math.min(1.4, Math.max(0.7, raw.rate)) : DEFAULT_VOICE_PREFS.rate;
-    return { voiceURI: typeof raw.voiceURI === 'string' && raw.voiceURI ? raw.voiceURI : undefined, rate };
+    return { voiceURI: typeof raw.voiceURI === 'string' && raw.voiceURI ? raw.voiceURI : undefined, rate, instant: raw.instant === true };
   } catch {
     return { ...DEFAULT_VOICE_PREFS };
   }
@@ -42,7 +44,7 @@ export function speak(text: string, lang: string, prefs: VoicePrefs = loadVoiceP
     synth.cancel();
     const utterance = new SpeechSynthesisUtterance(spoken);
     utterance.lang = lang;
-    const voice = chooseVoice(synth.getVoices(), lang, prefs.voiceURI);
+    const voice = chooseVoice(synth.getVoices(), lang, prefs.voiceURI, prefs.instant);
     if (voice) {
       utterance.voice = voice;
       utterance.lang = voice.lang;
@@ -63,4 +65,25 @@ export function speak(text: string, lang: string, prefs: VoicePrefs = loadVoiceP
 
 export function stopSpeaking(): void {
   if (speechOutputSupported()) window.speechSynthesis.cancel();
+}
+
+/**
+ * The first utterance of a session is slow while the browser loads the voice. Saying something
+ * silent right after the user taps the mic means the first real answer starts at once.
+ */
+export function warmUpSpeech(lang: string): void {
+  if (!speechOutputSupported()) return;
+  try {
+    const synth = window.speechSynthesis;
+    synth.getVoices();
+    const quiet = new SpeechSynthesisUtterance('.');
+    quiet.volume = 0;
+    quiet.lang = lang;
+    const prefs = loadVoicePrefs();
+    const voice = chooseVoice(synth.getVoices(), lang, prefs.voiceURI, prefs.instant);
+    if (voice) quiet.voice = voice;
+    synth.speak(quiet);
+  } catch {
+    /* warming up is only an optimisation */
+  }
 }

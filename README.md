@@ -69,7 +69,10 @@ cards → planner.
   "update task 2 to 7 pm", "delete number 3", "mark task 1 as done".
 - Understands *this / it / that one*, asks "which one?" when two tasks fit (answer "the second
   one" or by name), warns about overlaps, and follows am/pm exactly ("8 AM to 9PM" is 13 hours).
-- Uses Gemini when it's on, the built-in parser otherwise. Spoken answers can be muted.
+- Fast: it acts about a quarter of a second after you stop talking (or from the live transcript, without
+  waiting for the browser to finalize), answers in roughly half a second, and only asks Gemini when the
+  built-in parser isn't sure (other languages, rambling sentences). Spoken answers can be muted, and
+  Settings has an Instant replies switch for a voice stored on the device.
 
 **Smart assistant (optional, Gemini free tier)**
 - Understands free-form input in any language (English, Urdu, Roman Urdu, Hindi…), including

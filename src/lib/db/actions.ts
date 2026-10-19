@@ -54,6 +54,35 @@ export async function replanAll(opts: { lateMinutes?: number; now?: number } = {
   return result;
 }
 
+/**
+ * Re-planning reads four tables and writes back, which is most of the time an action takes. When a
+ * caller that wants a fast answer (the voice assistant) asks for it, actions answer first and the
+ * re-plan finishes in the background; `planSettled()` waits for it before anything reads the plan.
+ */
+let background = false;
+let pendingReplan: Promise<unknown> = Promise.resolve();
+
+export async function replanSoon(): Promise<void> {
+  if (background) {
+    pendingReplan = pendingReplan.then(() => replanAll()).catch(() => undefined);
+    return;
+  }
+  await replanAll();
+}
+
+/** Resolves once any background re-plan has finished. */
+export const planSettled = (): Promise<unknown> => pendingReplan;
+
+/** Runs `fn` with re-planning moved off its critical path. */
+export async function withBackgroundReplan<T>(fn: () => Promise<T>): Promise<T> {
+  background = true;
+  try {
+    return await fn();
+  } finally {
+    background = false;
+  }
+}
+
 // ------------------------------------------------------------------ events & undo
 
 async function logEvent(taskId: string, type: TaskEventType, extra: Partial<TaskEvent> = {}): Promise<void> {
@@ -70,7 +99,7 @@ async function withUndo(taskIds: string[], change: () => Promise<void>): Promise
     const created = taskIds.filter((id) => !before.some((t) => t.id === id));
     if (created.length) await db.tasks.bulkDelete(created);
     await db.taskEvents.where('taskId').anyOf(taskIds).filter((e) => e.at >= startedAt).delete();
-    await replanAll();
+    await replanSoon();
   };
 }
 
@@ -106,10 +135,13 @@ export async function addParsedTasks(parsed: ParsedTask[]): Promise<{ tasks: Tas
   const now = Date.now();
   const tasks = parsed.filter((p) => p.title.trim()).map((p) => taskFromParsed(p, now));
   const undo = await withUndo(tasks.map((t) => t.id), async () => {
-    await db.tasks.bulkAdd(tasks);
-    await db.taskEvents.bulkAdd(tasks.map((t) => ({ id: newId(), taskId: t.id, type: 'created' as const, at: now, category: t.category })));
+    // two independent writes: no reason to wait for one before starting the other
+    await Promise.all([
+      db.tasks.bulkAdd(tasks),
+      db.taskEvents.bulkAdd(tasks.map((t) => ({ id: newId(), taskId: t.id, type: 'created' as const, at: now, category: t.category }))),
+    ]);
   });
-  await replanAll();
+  await replanSoon();
   return { tasks, undo };
 }
 
@@ -120,7 +152,7 @@ export async function startTask(id: string): Promise<Undo> {
     await patch(id, { status: 'doing' });
     await logEvent(id, 'started');
   });
-  await replanAll();
+  await replanSoon();
   return undo;
 }
 
@@ -162,7 +194,7 @@ export async function completeTask(id: string): Promise<Undo> {
     if (spawned.length) await db.tasks.bulkAdd(spawned);
     await logEvent(id, 'completed', { category: task.category, durationMin: spentMin || undefined });
   });
-  await replanAll();
+  await replanSoon();
   return undo;
 }
 
@@ -178,7 +210,7 @@ export async function skipTask(id: string): Promise<Undo> {
     else await patch(id, { startAfter: tomorrow, blocks: [], status: 'todo' });
     await logEvent(id, 'skipped');
   });
-  await replanAll();
+  await replanSoon();
   return undo;
 }
 
@@ -187,13 +219,13 @@ export async function deleteTask(id: string): Promise<Undo> {
     await patch(id, { deletedAt: Date.now(), blocks: [] });
     await logEvent(id, 'dropped');
   });
-  await replanAll();
+  await replanSoon();
   return undo;
 }
 
 export async function updateTask(id: string, changes: Partial<Task>): Promise<Undo> {
   const undo = await withUndo([id], () => patch(id, changes));
-  await replanAll();
+  await replanSoon();
   return undo;
 }
 
@@ -203,7 +235,7 @@ export async function editTask(id: string, changes: Partial<Task>, rescheduled: 
     await patch(id, changes);
     if (rescheduled) await logEvent(id, 'rescheduled');
   });
-  await replanAll();
+  await replanSoon();
   return undo;
 }
 
@@ -214,7 +246,7 @@ export async function applySuggestion(taskId: string, action: 'move' | 'drop', s
     else await patch(taskId, { startAfter, blocks: [] });
     await logEvent(taskId, action === 'drop' ? 'dropped' : 'rescheduled');
   });
-  await replanAll();
+  await replanSoon();
   return undo;
 }
 
@@ -240,7 +272,7 @@ export async function pushTask(id: string, to: number, hasTime: boolean): Promis
     }
     await logEvent(id, 'rescheduled');
   });
-  await replanAll();
+  await replanSoon();
   return undo;
 }
 
@@ -276,7 +308,7 @@ export async function moveBlock(taskId: string, blockId: string, newStart: numbe
     await patch(taskId, { blocks });
     await logEvent(taskId, 'rescheduled');
   });
-  await replanAll();
+  await replanSoon();
   return { ok: true, undo };
 }
 
@@ -289,7 +321,7 @@ export async function moveFixedTask(taskId: string, newStart: number): Promise<M
     await patch(taskId, { fixedStart: newStart, fixedEnd: newStart + (task.fixedEnd! - task.fixedStart!) });
     await logEvent(taskId, 'rescheduled');
   });
-  await replanAll();
+  await replanSoon();
   return { ok: true, undo };
 }
 
@@ -325,7 +357,7 @@ export async function exportAll(): Promise<{ json: string; csv: string }> {
 export async function updateProfile(changes: Partial<Profile>): Promise<void> {
   await ensureProfile();
   await db.profile.update('me', { ...changes, updatedAt: Date.now(), syncState: 'dirty' });
-  await replanAll();
+  await replanSoon();
 }
 
 /** Flags a task for Google Calendar; the sync loop creates, updates or removes the event. */

@@ -25,7 +25,7 @@ export function AssistantVoice() {
   const voices = useVoices();
   const [prefs, setPrefs] = useState<VoicePrefs>(loadVoicePrefs);
   const ranked = useMemo(() => rankVoices(voices, 'en-US'), [voices]);
-  const best = useMemo(() => chooseVoice(voices, 'en-US'), [voices]);
+  const best = useMemo(() => chooseVoice(voices, 'en-US', undefined, prefs.instant), [voices, prefs.instant]);
 
   if (!speechOutputSupported()) {
     return (
@@ -64,6 +64,20 @@ export function AssistantVoice() {
         </p>
       </div>
 
+      <label className="flex items-start gap-3 rounded-[16px] border border-line p-3.5">
+        <input
+          type="checkbox"
+          role="switch"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--app-fg)]"
+          checked={prefs.instant === true}
+          onChange={(e) => update({ instant: e.target.checked })}
+        />
+        <span>
+          <span className="block text-[15px] font-medium">Instant replies</span>
+          <span className="block text-sm text-muted">Use a voice stored on this device. It starts talking at once; online “Natural” voices sound better but take a moment to start.</span>
+        </span>
+      </label>
+
       <div>
         <label htmlFor={`${id}-rate`} className="mb-1 flex items-center justify-between text-sm font-medium">
           Speed <span className="text-muted">{prefs.rate.toFixed(2).replace(/0$/, '')}×</span>
@@ -84,8 +98,8 @@ export function AssistantVoice() {
         <Button size="sm" onClick={() => void speak(SAMPLE, 'en-US', prefs)}>
           <Play size={14} fill="currentColor" /> Hear it
         </Button>
-        {(prefs.voiceURI || prefs.rate !== DEFAULT_VOICE_PREFS.rate) && (
-          <Button size="sm" variant="ghost" onClick={() => update({ voiceURI: undefined, rate: DEFAULT_VOICE_PREFS.rate })}>
+        {(prefs.voiceURI || prefs.instant || prefs.rate !== DEFAULT_VOICE_PREFS.rate) && (
+          <Button size="sm" variant="ghost" onClick={() => update({ voiceURI: undefined, instant: false, rate: DEFAULT_VOICE_PREFS.rate })}>
             Reset
           </Button>
         )}

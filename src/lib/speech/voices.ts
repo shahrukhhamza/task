@@ -41,11 +41,20 @@ export function rankVoices<T extends VoiceInfo>(voices: T[], lang: string): T[] 
     .map((x) => x.v);
 }
 
-/** The voice the user picked if it is still there, else the best one. */
-export function chooseVoice<T extends VoiceInfo>(voices: T[], lang: string, preferredURI?: string): T | undefined {
+/**
+ * The voice the user picked if it is still there, else the best one. With `instant`, a voice stored
+ * on the device wins: online voices sound better but fetch their audio over the network first, so
+ * they start talking noticeably later.
+ */
+export function chooseVoice<T extends VoiceInfo>(voices: T[], lang: string, preferredURI?: string, instant = false): T | undefined {
   if (preferredURI) {
     const picked = voices.find((v) => v.voiceURI === preferredURI);
     if (picked) return picked;
   }
-  return rankVoices(voices, lang)[0];
+  const ranked = rankVoices(voices, lang);
+  if (instant) {
+    const local = ranked.find((v) => v.localService);
+    if (local) return local;
+  }
+  return ranked[0];
 }

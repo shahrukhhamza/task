@@ -7,6 +7,8 @@ export function toSpeech(text: string): string {
     text
       // “Meeting” and "Meeting" are read as plain words
       .replace(/[“”"]/g, '')
+      // today is the default, so it isn't worth saying
+      .replace(/\btoday from\b/gi, 'from')
       .replace(/\s*\(task (\d+)\)/gi, ', task $1,')
       .replace(/\(#(\d+)\)/g, 'number $1')
       .replace(/#(\d+)/g, 'number $1')

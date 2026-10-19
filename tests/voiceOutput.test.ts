@@ -49,8 +49,8 @@ describe('picking the most natural voice', () => {
 
 describe('written text becomes spoken text', () => {
   it.each([
-    ['Added “Meeting” (task 3), today from 7:00 PM to 8:00 PM.', 'Added Meeting, task 3, today from 7 to 8 PM.'],
-    ['Updated "Meeting": today from 6:00 PM to 6:30 PM.', 'Updated Meeting: today from 6 to 6:30 PM.'],
+    ['Added “Meeting” (task 3), today from 7:00 PM to 8:00 PM.', 'Added Meeting, task 3, from 7 to 8 PM.'],
+    ['Updated "Meeting": today from 6:00 PM to 6:30 PM.', 'Updated Meeting: from 6 to 6:30 PM.'],
     ['"Meeting" now takes 30m.', 'Meeting now takes 30 minutes.'],
     ['Moved "Gym" to tomorrow.', 'Moved Gym to tomorrow.'],
     ['Added “Study” to your day (1h 30m).', 'Added Study to your day (1 hour 30 minutes).'],
@@ -64,5 +64,22 @@ describe('written text becomes spoken text', () => {
   it('leaves ordinary sentences alone', () => {
     expect(toSpeech('Okay, talk to you later.')).toBe('Okay, talk to you later.');
     expect(toSpeech('')).toBe('');
+  });
+});
+
+describe('instant replies', () => {
+  const voices = [voice('Microsoft David Desktop - English (United States)'), voice('Microsoft Aria Online (Natural) - English (United States)', 'en-US', false)];
+
+  it('prefers a voice stored on the device when asked, since online voices start later', () => {
+    expect(chooseVoice(voices, 'en-US')?.name).toContain('Aria');
+    expect(chooseVoice(voices, 'en-US', undefined, true)?.name).toContain('David');
+  });
+
+  it('still uses the online voice when the device has no other', () => {
+    expect(chooseVoice([voices[1]], 'en-US', undefined, true)?.name).toContain('Aria');
+  });
+
+  it('a voice the user picked beats the setting', () => {
+    expect(chooseVoice(voices, 'en-US', voices[1].voiceURI, true)?.name).toContain('Aria');
   });
 });
