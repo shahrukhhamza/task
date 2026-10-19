@@ -19,7 +19,8 @@ describe('push commands', () => {
     });
   });
   it('move dentist to 5pm', () => {
-    expect(cmd('move dentist to 5pm')).toMatchObject({ kind: 'push', target: 'dentist', to: at(10, 19, 17), hasTime: true });
+    // a time with no day keeps the task on its own day, so it is an edit rather than a move to today
+    expect(cmd('move dentist to 5pm')).toEqual({ kind: 'update', target: 'dentist', change: { startMin: 17 * 60 } });
   });
   it('postpone the assignment to friday', () => {
     expect(cmd('postpone the assignment to friday')).toMatchObject({ kind: 'push', target: 'assignment', to: at(10, 23, 0) });

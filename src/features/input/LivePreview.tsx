@@ -23,6 +23,20 @@ function describeCommand(c: ParsedCommand, tz: string, now: number): string {
       return 'Show what’s next';
     case 'calendar':
       return `Add “${c.target}” to Google Calendar`;
+    case 'update': {
+      const { change } = c;
+      const what: string[] = [];
+      if (change.title) what.push(`rename to “${change.title}”`);
+      if (change.startMin !== undefined || change.asRange) {
+        const start = change.startMin ?? change.asRange?.startMin;
+        const clock = (m: number) => `${m % 720 === 0 ? 12 : Math.floor((m % 720) / 60)}:${String(m % 60).padStart(2, '0')} ${m < 720 ? 'AM' : 'PM'}`;
+        what.push(`${change.endMin !== undefined ? `${clock(start as number)} to ${clock(change.endMin)}` : `start at ${clock(start as number)}`}`);
+      }
+      if (change.day !== undefined) what.push(formatDayLabel(change.day, tz, now).toLowerCase());
+      if (change.durationMin) what.push(`${change.durationMin} min long`);
+      if (change.priority) what.push(`${change.priority === 'med' ? 'normal' : change.priority} priority`);
+      return `Update ${c.target ? `“${c.target}”` : 'the task'}: ${what.join(', ')}`;
+    }
   }
 }
 

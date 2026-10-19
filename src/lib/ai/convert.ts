@@ -1,7 +1,7 @@
 // Turns Gemini's JSON into Dayflow's own types, defensively: anything malformed is
 // dropped or clamped rather than trusted.
 
-import type { ParseContext, ParsedCommand, ParsedTask, ParseResult } from '../parser';
+import type { ParseContext, ParsedCommand, ParsedTask, ParseResult, TaskChange } from '../parser';
 import { endOfDayTz, fromLocalInput, MIN, startOfDayTz } from '../time/tz';
 import type { Priority, Recurrence } from '../types';
 import type { Schema } from '../../../supabase/functions/_shared/gemini.ts';
@@ -22,7 +22,17 @@ export interface AiTask {
 export interface AiParse {
   intent?: 'tasks' | 'command' | 'habit' | 'none';
   tasks?: AiTask[] | null;
-  command?: { action?: string; target?: string | null; date?: string | null; time?: string | null; minutes?: number | null } | null;
+  command?: {
+    action?: string;
+    target?: string | null;
+    date?: string | null;
+    time?: string | null;
+    endTime?: string | null;
+    fromTime?: string | null;
+    newTitle?: string | null;
+    priority?: string | null;
+    minutes?: number | null;
+  } | null;
   habit?: { title?: string; days?: number[] | null } | null;
   reply?: string | null;
 }
@@ -66,11 +76,15 @@ export const PARSE_SCHEMA: Schema = {
       type: 'OBJECT',
       nullable: true,
       properties: {
-        action: { type: 'STRING', enum: ['push', 'finish', 'start', 'late', 'next', 'delete', 'calendar'] },
+        action: { type: 'STRING', enum: ['update', 'push', 'finish', 'start', 'late', 'next', 'delete', 'calendar'] },
         target: { type: 'STRING', nullable: true, description: 'Title of the existing task it refers to' },
-        date: { type: 'STRING', nullable: true },
-        time: { type: 'STRING', nullable: true },
-        minutes: { type: 'INTEGER', nullable: true },
+        date: { type: 'STRING', nullable: true, description: 'YYYY-MM-DD, only when the user names a day' },
+        time: { type: 'STRING', nullable: true, description: 'HH:MM 24-hour: the NEW start time (update) or new time (push)' },
+        endTime: { type: 'STRING', nullable: true, description: 'HH:MM 24-hour: the NEW end time (update)' },
+        fromTime: { type: 'STRING', nullable: true, description: 'HH:MM 24-hour: the time the task is at NOW, when the user says "from 6 to 7"' },
+        newTitle: { type: 'STRING', nullable: true, description: 'New name (update), when the user renames the task' },
+        priority: { type: 'STRING', nullable: true, enum: ['high', 'med', 'low'], description: 'New priority (update)' },
+        minutes: { type: 'INTEGER', nullable: true, description: 'late: minutes behind. update: the new length in minutes' },
       },
       required: ['action'],
     },
@@ -152,6 +166,31 @@ function toCommand(c: NonNullable<AiParse['command']>, ctx: ParseContext): Parse
     case 'delete':
     case 'calendar':
       return target ? { kind: c.action, target } : null;
+    case 'update': {
+      const clock = (t?: string | null) => {
+        if (!t || !TIME.test(t)) return undefined;
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+      };
+      const change: TaskChange = {};
+      const start = clock(c.time);
+      const end = clock(c.endTime);
+      const from = clock(c.fromTime);
+      if (start !== undefined) change.startMin = start;
+      if (end !== undefined) change.endMin = end;
+      if (from !== undefined) change.fromMin = from;
+      if (c.date && DATE.test(c.date)) {
+        const noon = at(c.date, '12:00', ctx.timezone);
+        if (noon !== undefined) change.day = startOfDayTz(noon, ctx.timezone);
+      }
+      if (c.minutes && c.minutes > 0) change.durationMin = Math.max(5, Math.min(720, Math.round(c.minutes)));
+      const newTitle = (c.newTitle ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
+      if (newTitle) change.title = newTitle.charAt(0).toUpperCase() + newTitle.slice(1);
+      if (c.priority === 'high' || c.priority === 'med' || c.priority === 'low') change.priority = c.priority;
+      // "from 6 to 7" with the task not at 6 means the range 6 to 7
+      if (from !== undefined && start !== undefined && end === undefined) change.asRange = { startMin: from, endMin: start };
+      return Object.keys(change).length ? { kind: 'update', target, change } : null;
+    }
     case 'push': {
       if (!target || !c.date || !DATE.test(c.date)) return null;
       const hasTime = !!c.time && TIME.test(c.time);

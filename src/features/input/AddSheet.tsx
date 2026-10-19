@@ -10,6 +10,7 @@ import { addHabit } from '../../lib/db/habitActions';
 import { db } from '../../lib/db/schema';
 import { describeDays, parseHabit } from '../../lib/habits';
 import { parseInput, parseTasksOnly, type ParsedTask } from '../../lib/parser';
+import { asUpdate } from '../../lib/updateIntent';
 import { useSpeechRecognition } from '../../lib/speech/useSpeechRecognition';
 import type { Profile } from '../../lib/types';
 import { useUi } from '../../store/ui';
@@ -105,13 +106,29 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
         }
       }
 
+      // "change the meeting to 7 pm" heard as a new task called "Meeting" is an edit of the one that exists
+      if (result.kind === 'tasks') {
+        const edit = asUpdate(result.tasks, value, await db.tasks.toArray(), ctx);
+        if (edit) result = { kind: 'command', command: edit, raw: value };
+      }
+
       if (result.kind === 'tasks') {
         setByAi(fromAi);
         setDrafts(result.tasks);
         setEditing(result.tasks.length === 1 ? 0 : null);
         setStep('review');
       } else if (result.kind === 'command') {
-        handleOutcome(await runCommand(result.command), value);
+        const outcome = await runCommand(result.command);
+        const fallback = outcome.kind === 'notFound' && outcome.soft ? parseTasksOnly(value, ctx) : undefined;
+        if (fallback?.kind === 'tasks') {
+          // "make dinner at 8" with no dinner to change: it was a new task all along
+          setByAi(false);
+          setDrafts(fallback.tasks);
+          setEditing(fallback.tasks.length === 1 ? 0 : null);
+          setStep('review');
+        } else {
+          handleOutcome(outcome, value);
+        }
       } else if (result.kind === 'habit') {
         const { undo } = await addHabit({ title: result.habit.title, days: result.habit.days });
         finish(`New habit: “${result.habit.title}” (${describeDays(result.habit.days).toLowerCase()}).`, undo);

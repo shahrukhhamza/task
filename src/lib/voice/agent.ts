@@ -7,7 +7,8 @@ import { addParsedTasks, isActive, type Undo } from '../db/actions';
 import { addHabit } from '../db/habitActions';
 import { db, ensureProfile } from '../db/schema';
 import { describeDays } from '../habits';
-import { parseInput, type ParsedTask, type ParseContext } from '../parser';
+import { parseInput, parseTasksOnly, type ParsedTask, type ParseContext } from '../parser';
+import { asUpdate } from '../updateIntent';
 import type { AiParseResult } from '../ai/convert';
 import { formatDayLabel, formatDuration, formatTime, MIN, startOfDayTz } from '../time/tz';
 import type { Task } from '../types';
@@ -143,8 +144,12 @@ export function createVoiceAgent(deps: AgentDeps) {
 
   async function act(result: AiParseResult, tz: string, raw: string): Promise<VoiceTurn> {
     switch (result.kind) {
-      case 'tasks':
+      case 'tasks': {
+        // "change the meeting to 7 pm" heard as a new task called "Meeting" is an edit of the one that exists
+        const edit = asUpdate(result.tasks, raw, await db.tasks.toArray(), { now: deps.now(), timezone: tz });
+        if (edit) return fromOutcome(await runCommand(edit, { contextTaskId: lastTaskId }));
         return addTasks(result.tasks, tz);
+      }
       case 'command':
         return fromOutcome(await runCommand(result.command, { contextTaskId: lastTaskId }));
       case 'habit': {
@@ -196,7 +201,13 @@ export function createVoiceAgent(deps: AgentDeps) {
         // Plain commands ("delete this", "push gym to tomorrow") don't need a model; everything else does its best
         const rules = parseInput(text, ctx);
         if (rules.kind === 'command') {
-          const turn = await fromOutcome(await runCommand(rules.command, { contextTaskId: lastTaskId }));
+          const outcome = await runCommand(rules.command, { contextTaskId: lastTaskId });
+          if (outcome.kind === 'notFound' && outcome.soft) {
+            // "make dinner at 8" with no dinner to change: it was a new task all along
+            if (deps.smart) return await act(await deps.understand(text, ctx, existing), timezone, text);
+            return await act(parseTasksOnly(text, ctx), timezone, text);
+          }
+          const turn = await fromOutcome(outcome);
           if (turn.tone !== 'error' || !deps.smart) return turn;
         }
         return await act(await deps.understand(text, ctx, existing), timezone, text);

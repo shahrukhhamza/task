@@ -10,6 +10,8 @@ export interface DateMatch {
   end?: number;
   hasTime: boolean;
   meridiemCertain: boolean;
+  /** True when the phrase names a day ("tomorrow", "Friday", "the 25th"), not just a time. */
+  dateCertain: boolean;
   /** True when the end of a range states am/pm itself ("6 to 7 am"). */
   endMeridiemCertain: boolean;
   /** Hour as written (0-23), before any am/pm guessing. */
@@ -44,6 +46,7 @@ export function parseDates(text: string, ctx: ParseContext, forwardDate = true):
       end: r.end ? toTimestamp(r.end, ctx.timezone) : undefined,
       hasTime: r.start.isCertain('hour'),
       meridiemCertain: r.start.isCertain('meridiem'),
+      dateCertain: r.start.isCertain('day') || r.start.isCertain('weekday'),
       endMeridiemCertain: r.end?.isCertain('meridiem') ?? false,
       hour: r.start.isCertain('hour') ? r.start.get('hour') : null,
     }));

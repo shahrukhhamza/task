@@ -1,18 +1,21 @@
 import { useCloud } from '../store/cloud';
-import { completeTask, deleteTask, isActive, pushTask, replanAll, setAddToCalendar, startTask, type Undo } from './db/actions';
+import { applyChange } from './changeTask';
+import { completeTask, deleteTask, editTask, isActive, pushTask, replanAll, setAddToCalendar, startTask, type Undo } from './db/actions';
 import { db, ensureProfile } from './db/schema';
 import { resolveTarget, type ParsedCommand } from './parser';
 import { nextBlock } from './scheduler';
-import { formatDayLabel, formatDuration, formatTime, MIN } from './time/tz';
+import { formatDayLabel, formatDuration, formatTime, MIN, minutesOfDay } from './time/tz';
 import type { Task } from './types';
 
 export type CommandOutcome =
   | { kind: 'done'; message: string; undo?: Undo; taskId?: string }
   | { kind: 'info'; message: string }
   | { kind: 'clarify'; question: string; options: Array<{ label: string; run: () => Promise<CommandOutcome> }> }
-  | { kind: 'notFound'; message: string; target: string };
+  /** `soft`: the sentence may just be a new task ("make dinner at 8"), so the caller can add it instead. */
+  | { kind: 'notFound'; message: string; target: string; soft?: boolean };
 
-const VERB: Record<'push' | 'finish' | 'start' | 'delete' | 'calendar', string> = {
+const VERB: Record<'push' | 'finish' | 'start' | 'delete' | 'calendar' | 'update', string> = {
+  update: 'change',
   push: 'move',
   finish: 'finish',
   start: 'start',
@@ -41,6 +44,17 @@ async function act(command: Extract<ParsedCommand, { target: string }>, task: Ta
         taskId: task.id,
       };
     }
+    case 'update': {
+      let change = command.change;
+      const at = task.fixedStart !== undefined ? minutesOfDay(task.fixedStart, timezone) : undefined;
+      // "from 6 to 7": if the task is at 6, it moves to 7; if not, the user is giving its new range
+      if (change.asRange && !(at !== undefined && change.fromMin !== undefined && at % 720 === change.fromMin % 720)) {
+        change = { ...change, startMin: change.asRange.startMin, endMin: change.asRange.endMin };
+      }
+      const applied = applyChange(task, change, timezone, Date.now());
+      if (!Object.keys(applied.changes).length) return { kind: 'info', message: applied.message };
+      return { kind: 'done', message: applied.message, undo: await editTask(task.id, applied.changes, applied.rescheduled), taskId: task.id };
+    }
     case 'push': {
       const undo = await pushTask(task.id, command.to, command.hasTime);
       const when = command.hasTime
@@ -61,6 +75,14 @@ export const isPronounTarget = (target: string): boolean =>
   /^(?:this|that|it|these|those)(?:\s+(?:one|task|meeting|event|appointment|reminder))?$|^(?:the\s+)?(?:last|latest|same|new|previous)(?:\s+(?:one|task|meeting))?$/i.test(
     target.trim(),
   );
+
+function ask(command: Extract<ParsedCommand, { target: string }>, candidates: Task[]): CommandOutcome {
+  return {
+    kind: 'clarify',
+    question: `Which one do you want to ${VERB[command.kind]}?`,
+    options: candidates.map((task) => ({ label: task.title, run: () => act(command, task) })),
+  };
+}
 
 /** Resolves the command's target against existing tasks, asking when it is ambiguous. */
 export async function runCommand(command: ParsedCommand, opts: RunOptions = {}): Promise<CommandOutcome> {
@@ -95,22 +117,31 @@ export async function runCommand(command: ParsedCommand, opts: RunOptions = {}):
     default: {
       const all = (await db.tasks.toArray()).filter((t) => !t.deletedAt);
       const pool = command.kind === 'delete' ? all.filter((t) => t.status !== 'dropped') : all.filter(isActive);
-      if (isPronounTarget(command.target)) {
+      const fromMin = command.kind === 'update' ? command.change.fromMin : undefined;
+      // tasks sitting at the time the user said they are at now ("from 6 pm to 7 pm")
+      const atThatTime = fromMin === undefined ? [] : pool.filter((t) => t.fixedStart !== undefined && minutesOfDay(t.fixedStart, timezone) % 720 === fromMin % 720);
+
+      if (!command.target || isPronounTarget(command.target)) {
         const inPlay = opts.contextTaskId ? pool.find((t) => t.id === opts.contextTaskId) : undefined;
+        if (atThatTime.length === 1) return act(command, atThatTime[0]);
         if (inPlay) return act(command, inPlay);
+        if (atThatTime.length > 1) return ask(command, atThatTime);
         return { kind: 'notFound', target: command.target, message: 'Which task do you mean? Tell me its name.' };
       }
       const found = resolveTarget(command.target, pool);
 
       if (found.kind === 'none') {
-        return { kind: 'notFound', target: command.target, message: `I couldn't find a task matching "${command.target}".` };
+        return {
+          kind: 'notFound',
+          target: command.target,
+          message: command.kind === 'update' ? `I couldn't find “${command.target}” to update. Say “add ${command.target}” to create it.` : `I couldn't find a task matching "${command.target}".`,
+          soft: command.kind === 'update' ? command.soft : undefined,
+        };
       }
       if (found.kind === 'ambiguous') {
-        return {
-          kind: 'clarify',
-          question: `Which one do you want to ${VERB[command.kind]}?`,
-          options: found.candidates.map((task) => ({ label: task.title, run: () => act(command, task) })),
-        };
+        const sameTime = found.candidates.filter((t) => atThatTime.some((a) => a.id === t.id));
+        if (sameTime.length === 1) return act(command, sameTime[0]);
+        return ask(command, found.candidates);
       }
       return act(command, found.task);
     }

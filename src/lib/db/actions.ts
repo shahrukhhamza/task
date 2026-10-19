@@ -197,6 +197,16 @@ export async function updateTask(id: string, changes: Partial<Task>): Promise<Un
   return undo;
 }
 
+/** Changes an existing task (new time, length, name or priority) and re-plans around it. */
+export async function editTask(id: string, changes: Partial<Task>, rescheduled: boolean): Promise<Undo> {
+  const undo = await withUndo([id], async () => {
+    await patch(id, changes);
+    if (rescheduled) await logEvent(id, 'rescheduled');
+  });
+  await replanAll();
+  return undo;
+}
+
 /** Applies planner suggestions such as "move X to after the deadline". */
 export async function applySuggestion(taskId: string, action: 'move' | 'drop', startAfter?: number): Promise<Undo> {
   const undo = await withUndo([taskId], async () => {

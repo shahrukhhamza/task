@@ -2,7 +2,7 @@
 // "6 to 6:30" growing into a full hour). Whatever the sentence says out loud about the
 // time of day and how long it lasts wins over what the model wrote.
 
-import type { ParsedTask } from '../parser';
+import type { ParsedTask, TaskChange } from '../parser';
 import { extractDuration } from '../parser/extract';
 import { spokenTimes, type SpokenTime } from '../parser/spokenTime';
 import { MIN, minutesOfDay } from '../time/tz';
@@ -51,4 +51,20 @@ export function applySpokenTimes(tasks: ParsedTask[], raw: string, timezone: str
     }
     return fixed;
   });
+}
+
+/**
+ * The same check for edits ("change the meeting to 7 pm"): the model's 24-hour times follow what
+ * was said about am/pm, and a stated range sets the new end.
+ */
+export function applySpokenChange(change: TaskChange, raw: string): TaskChange {
+  if (change.startMin === undefined) return change;
+  const spoken = spokenTimes(raw).filter((s) => !s.bare);
+  const sameFace = spoken.filter((s) => s.start % HALF_DAY === (change.startMin as number) % HALF_DAY);
+  const pick = sameFace.find((s) => s.start === change.startMin) ?? (new Set(sameFace.map((s) => s.start)).size === 1 ? sameFace[0] : undefined);
+  if (!pick) return change;
+  const next: TaskChange = { ...change, startMin: pick.start };
+  if (pick.end !== undefined) next.endMin = pick.end;
+  else if (change.endMin !== undefined) next.endMin = (change.endMin + (pick.start - (change.startMin as number)) + 1440) % 1440;
+  return next;
 }

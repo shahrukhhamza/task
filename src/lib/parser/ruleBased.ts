@@ -1,5 +1,6 @@
-import { endOfDayTz, MIN, minutesOfDay } from '../time/tz';
+import { endOfDayTz, MIN } from '../time/tz';
 import { parseDates } from './chronoTz';
+import { resolveWhen } from './when';
 import { normalizeDayParts } from './spokenTime';
 import { parseCommand } from './commands';
 import {
@@ -81,19 +82,7 @@ export function parseTaskPhrase(rawInput: string, ctx: ParseContext): ParsedTask
   const first = found[0];
   if (first) {
     const { hasTime } = first;
-    let start = first.start;
-    let end = first.end;
-
-    // "dentist at 4" / "meeting 3 to 4" without am/pm: afternoon hours below 7 mean pm
-    if (hasTime && !first.meridiemCertain && !first.endMeridiemCertain && first.hour !== null && first.hour >= 1 && first.hour < 7) {
-      start += 12 * 60 * MIN;
-      if (end !== undefined) end += 12 * 60 * MIN;
-    }
-    // "lunch 12 to 1", "9 to 5", "10 pm to 2": an end without am/pm is the next time that clock face comes round
-    if (hasTime && end !== undefined && !first.endMeridiemCertain) {
-      const gap = (((minutesOfDay(end, ctx.timezone) - minutesOfDay(start, ctx.timezone)) % 720) + 720) % 720;
-      end = start + (gap || 720) * MIN;
-    }
+    const { start, end } = resolveWhen(first, ctx.timezone);
 
     const before = text.slice(0, first.index);
     const deadlineWord = /\b(?:due|by|before|until|till|deadline)\s*$/i.test(before);
