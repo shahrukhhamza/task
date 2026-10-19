@@ -10,6 +10,8 @@ export interface DateMatch {
   end?: number;
   hasTime: boolean;
   meridiemCertain: boolean;
+  /** True when the end of a range states am/pm itself ("6 to 7 am"). */
+  endMeridiemCertain: boolean;
   /** Hour as written (0-23), before any am/pm guessing. */
   hour: number | null;
 }
@@ -42,6 +44,7 @@ export function parseDates(text: string, ctx: ParseContext, forwardDate = true):
       end: r.end ? toTimestamp(r.end, ctx.timezone) : undefined,
       hasTime: r.start.isCertain('hour'),
       meridiemCertain: r.start.isCertain('meridiem'),
+      endMeridiemCertain: r.end?.isCertain('meridiem') ?? false,
       hour: r.start.isCertain('hour') ? r.start.get('hour') : null,
     }));
 }

@@ -7,6 +7,7 @@ import type { ParseContext } from '../parser';
 import { formatDuration, formatTime } from '../time/tz';
 import type { Task } from '../types';
 import { PARSE_SCHEMA, toParseResult, type AiParse, type AiParseResult } from './convert';
+import { applySpokenTimes } from './guard';
 import { AiError, chooseModel, generateJson, type JsonRequest } from '../../../supabase/functions/_shared/gemini.ts';
 import { aiReady, useAi } from './settings';
 
@@ -78,10 +79,12 @@ const PARSE_RULES = `You are the input layer of Dayflow, a personal day planner.
 Rules:
 - intent "tasks": new things to do; one item per task, split lists. "command": acts on an EXISTING task (move/postpone → push, done/finished → finish, start, delete/cancel → delete, add to calendar → calendar), says they are late/behind (late, with minutes if given), or asks what's next (next). "habit": a recurring habit to track (e.g. "habit: read daily", "I want to meditate every morning"). "none": nothing actionable; then give a short helpful reply.
 - kind "fixed" when it happens at a set time (meeting, class, appointment, "gym at 6pm"); "deadline" when it must be done by a date or time (due, by, before, deadline); otherwise "flexible". A flexible task mentioned for a day ("call mom tomorrow") gets that date.
-- Resolve relative dates using the calendar given. Times are 24-hour HH:MM. A bare hour from 1 to 6 without am/pm means the afternoon. A time already past today, with no date, means tomorrow.
+- Resolve relative dates using the calendar given. Times are 24-hour HH:MM. Respect am/pm exactly: "8 AM to 9PM" is time 08:00 and endTime 21:00, "from 5 am to 6 am" is 05:00 to 06:00, "9 at night" is 21:00, 12 AM is 00:00 and 12 PM is 12:00. A bare hour from 1 to 6 without am/pm means the afternoon. A time already past today, with no date, means tomorrow.
+- A message like "add a meeting from 5 to 6" is one fixed task titled "Meeting", never "Add a meeting".
 - durationMin only when stated or obvious ("quick call" = 15). Never invent one.
 - priority "high" only for urgent/important wording, "low" for whenever/someday/no rush, otherwise "med".
 - repeat only for every/daily/weekly/each wording. addToCalendar only if they ask to put it in their calendar.
+- When the user says this, it, that or the last one about a task, use target "this" (the app knows which task they mean).
 - Titles: short and natural, in the user's own language and script, without dates, times or durations, first letter capitalised.
 - Input may be in any language (English, Urdu, Roman Urdu, Hindi, Arabic and more) and may contain voice-typing mistakes; understand the intent.`;
 
@@ -97,7 +100,8 @@ export async function understand(text: string, ctx: ParseContext, existing: Task
     schema: PARSE_SCHEMA,
     temperature: 0.1,
   });
-  return toParseResult(ai, ctx, text);
+  const result = toParseResult(ai, ctx, text);
+  return result.kind === 'tasks' ? { ...result, tasks: applySpokenTimes(result.tasks, text, ctx.timezone) } : result;
 }
 
 // ------------------------------------------------------------------ break a task down

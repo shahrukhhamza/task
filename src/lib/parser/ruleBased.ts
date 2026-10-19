@@ -1,5 +1,6 @@
-import { endOfDayTz, MIN } from '../time/tz';
+import { endOfDayTz, MIN, minutesOfDay } from '../time/tz';
 import { parseDates } from './chronoTz';
+import { normalizeDayParts } from './spokenTime';
 import { parseCommand } from './commands';
 import {
   expandDateTags,
@@ -31,6 +32,14 @@ function stripLeadIn(line: string): string {
     .trim();
 }
 
+/** "add a meeting ...", "schedule a call ...", "create a task to ..." name the task that follows. */
+function stripAddPhrase(text: string): string {
+  return text.replace(
+    /^\s*(?:please\s+)?(?:(?:can|could|will|would)\s+you\s+)?(?:add|create|schedule|set\s+up|put\s+in)\s+(?:me\s+)?(?:(?:a|an|the|my|new)\s+)*(?:(?:task|todo|to-do|reminder|event|entry)\s*(?:called|named|for|to|:)?\s*)?/i,
+    '',
+  );
+}
+
 function tidyTitle(raw: string): string {
   let t = raw.replace(/\s+/g, ' ').trim();
   for (let i = 0; i < 3; i++) {
@@ -44,7 +53,7 @@ function tidyTitle(raw: string): string {
 
 /** Parses one task phrase (no splitting). Returns a task with an empty title if only attributes were found. */
 export function parseTaskPhrase(rawInput: string, ctx: ParseContext): ParsedTask {
-  let text = stripLeadIn(rawInput);
+  let text = normalizeDayParts(stripLeadIn(rawInput));
 
   const cat = extractCategoryTag(text);
   text = cat.text;
@@ -53,7 +62,7 @@ export function parseTaskPhrase(rawInput: string, ctx: ParseContext): ParsedTask
   const cal = extractCalendarFlag(text);
   text = cal.text;
   if (cal.value) text = text.replace(/^\s*(?:add|schedule)\s+/i, '');
-  text = text.replace(/^\s*add\s+(?:a\s+)?task\s*:?\s*/i, '');
+  text = stripAddPhrase(text);
   const rec = extractRecurrence(expandDateTags(text));
   text = rec.text;
   const dur = extractDuration(text);
@@ -74,9 +83,14 @@ export function parseTaskPhrase(rawInput: string, ctx: ParseContext): ParsedTask
     let end = first.end;
 
     // "dentist at 4" / "meeting 3 to 4" without am/pm: afternoon hours below 7 mean pm
-    if (hasTime && !first.meridiemCertain && first.hour !== null && first.hour >= 1 && first.hour < 7) {
+    if (hasTime && !first.meridiemCertain && !first.endMeridiemCertain && first.hour !== null && first.hour >= 1 && first.hour < 7) {
       start += 12 * 60 * MIN;
       if (end !== undefined) end += 12 * 60 * MIN;
+    }
+    // "lunch 12 to 1", "9 to 5", "10 pm to 2": an end without am/pm is the next time that clock face comes round
+    if (hasTime && end !== undefined && !first.endMeridiemCertain) {
+      const gap = (((minutesOfDay(end, ctx.timezone) - minutesOfDay(start, ctx.timezone)) % 720) + 720) % 720;
+      end = start + (gap || 720) * MIN;
     }
 
     const before = text.slice(0, first.index);
