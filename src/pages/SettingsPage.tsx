@@ -1,3 +1,4 @@
+import { AssistantVoice } from '../features/settings/AssistantVoice';
 import { Bell, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Database, Download, Mail, Palette, Smartphone, Sparkles, Sun, Trash2, UserRound } from 'lucide-react';
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -231,6 +232,7 @@ export function SettingsPage({ data }: { data: PlannerData }) {
                 </select>
               )}
             </Field>
+            <AssistantVoice />
             {installEvent ? (
               <Button
                 variant="primary"

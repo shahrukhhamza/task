@@ -59,7 +59,9 @@ cards → planner.
   deadline alerts and an evening wrap-up, each switchable in Settings → Notifications, with a
   "Send a test to this phone" button.
 
-**Voice assistant** (*Talk to Dayflow*: sidebar, the floating mic on phones, or press `V`)
+**Voice assistant**: tap the floating mic (or the sidebar button, or press `V`) and it starts
+  listening at once. A small panel floats above the app, so you can keep using any page while you talk.
+  Pick its voice and speed in Settings → Look & voice.
 - Hands-free: it listens, waits for a pause, acts at once and answers out loud, then listens
   again. "Add a meeting from 5 to 6 pm" creates the task; "remove this" deletes the one you
   were just talking about; "undo" takes it back; "what's on today?" reads your day.

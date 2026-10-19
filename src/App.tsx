@@ -9,7 +9,8 @@ import { Skeleton } from './components/ui';
 import { FocusOverlay } from './features/focus/FocusOverlay';
 import { AddSheet } from './features/input/AddSheet';
 import { TaskSheet } from './features/tasks/TaskSheet';
-import { VoiceAgent } from './features/voice/VoiceAgent';
+import { VoiceDock } from './features/voice/VoiceDock';
+import { VoiceProvider } from './features/voice/VoiceProvider';
 import { useData } from './hooks/useData';
 import { TaskNumbersProvider } from './hooks/useTaskNumbers';
 import { useShortcuts } from './hooks/useShortcuts';
@@ -54,6 +55,7 @@ function Shell() {
 
   return (
     <TaskNumbersProvider tasks={data.tasks}>
+      <VoiceProvider profile={data.profile}>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-full focus:bg-surface focus:px-4 focus:py-2">
         Skip to content
       </a>
@@ -93,10 +95,11 @@ function Shell() {
 
       <BottomNav />
       <AddSheet profile={data.profile} now={data.now} />
-      <VoiceAgent profile={data.profile} />
+      <VoiceDock />
       <TaskSheet tasks={data.tasks} profile={data.profile} now={data.now} risks={data.livePlan.risks} />
       {focusTask && <FocusOverlay key={focusTask.id} task={focusTask} />}
       <Toasts />
+      </VoiceProvider>
     </TaskNumbersProvider>
   );
 }

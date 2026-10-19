@@ -13,7 +13,8 @@ export const NAV_ITEMS = [
 /** Desktop navigation: brand, sections, the main action, and the assistant's status. */
 export function Sidebar() {
   const openAdd = useUi((s) => s.openAdd);
-  const openVoice = useUi((s) => s.openVoice);
+  const voiceOn = useUi((s) => s.voiceOn);
+  const toggleVoice = useUi((s) => s.toggleVoice);
   const ai = useAiAvailable();
 
   return (
@@ -33,11 +34,14 @@ export function Sidebar() {
       </button>
       <button
         type="button"
-        onClick={openVoice}
-        className="mb-8 flex h-11 items-center justify-center gap-2 rounded-full border border-line font-medium text-fg transition hover:bg-surface-2"
+        onClick={toggleVoice}
+        aria-pressed={voiceOn}
+        className={`mb-8 flex h-11 items-center justify-center gap-2 rounded-full border font-medium transition ${
+          voiceOn ? 'border-transparent bg-red-600 text-white' : 'border-line text-fg hover:bg-surface-2'
+        }`}
       >
-        <Mic size={18} strokeWidth={2.4} /> Talk to Dayflow
-        <kbd className="ml-1 rounded-md bg-surface-2 px-1.5 text-xs font-medium text-muted">V</kbd>
+        <Mic size={18} strokeWidth={2.4} /> {voiceOn ? 'Listening… tap to stop' : 'Talk to Dayflow'}
+        {!voiceOn && <kbd className="ml-1 rounded-md bg-surface-2 px-1.5 text-xs font-medium text-muted">V</kbd>}
       </button>
 
       <nav aria-label="Main" className="grid gap-1">

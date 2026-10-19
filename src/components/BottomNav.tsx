@@ -1,4 +1,4 @@
-import { CalendarDays, Home, Mic, Plus, Settings, TrendingUp } from 'lucide-react';
+import { CalendarDays, Home, Plus, Settings, TrendingUp } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useUi } from '../store/ui';
 
@@ -36,18 +36,8 @@ function Item({ to, label, icon: Icon }: (typeof LEFT)[number]) {
 /** Floating dark pill with the main sections and a big add button in the middle. */
 export function BottomNav() {
   const openAdd = useUi((s) => s.openAdd);
-  const openVoice = useUi((s) => s.openVoice);
   return (
     <>
-      <button
-        type="button"
-        onClick={openVoice}
-        aria-label="Talk to Dayflow"
-        title="Talk to Dayflow"
-        className="fixed bottom-[calc(6.25rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-fg text-app shadow-xl ring-1 ring-line transition hover:scale-105 lg:hidden dark:bg-surface-2 dark:text-fg"
-      >
-        <Mic size={21} strokeWidth={2.3} />
-      </button>
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:hidden">
       <div className="flex items-center gap-1 rounded-full bg-nav p-2 shadow-2xl ring-1 ring-white/10">
         {LEFT.map((item) => (

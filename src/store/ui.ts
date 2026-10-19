@@ -23,10 +23,10 @@ interface UiState {
   openAdd: (text?: string) => void;
   closeAdd: () => void;
 
-  /** The hands-free voice assistant. */
-  voiceOpen: boolean;
-  openVoice: () => void;
-  closeVoice: () => void;
+  /** The hands-free voice assistant is listening. */
+  voiceOn: boolean;
+  setVoice: (on: boolean) => void;
+  toggleVoice: () => void;
 
   /** The task shown in the detail sheet. */
   selectedTaskId: string | null;
@@ -54,9 +54,9 @@ export const useUi = create<UiState>((set) => ({
   openAdd: (text = '') => set({ addOpen: true, addText: text, selectedTaskId: null }),
   closeAdd: () => set({ addOpen: false, addText: '' }),
 
-  voiceOpen: false,
-  openVoice: () => set({ voiceOpen: true, addOpen: false, addText: '', selectedTaskId: null }),
-  closeVoice: () => set({ voiceOpen: false }),
+  voiceOn: false,
+  setVoice: (voiceOn) => set({ voiceOn }),
+  toggleVoice: () => set((s) => ({ voiceOn: !s.voiceOn })),
 
   selectedTaskId: null,
   select: (selectedTaskId) => set({ selectedTaskId }),
