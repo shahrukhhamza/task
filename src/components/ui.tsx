@@ -23,7 +23,7 @@ export function Button({ variant = 'secondary', size = 'md', className = '', ...
     <button
       type="button"
       {...rest}
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 ${sizing} ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full font-medium transition disabled:cursor-not-allowed disabled:opacity-45 ${sizing} ${VARIANTS[variant]} ${className}`}
     />
   );
 }
@@ -80,7 +80,7 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
 
 /** Small uppercase-free label above a big headline, as in "Current tasks". */
 export const Kicker = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
-  <p className={`text-sm font-semibold opacity-70 ${className}`}>{children}</p>
+  <p className={`text-sm font-medium opacity-70 ${className}`}>{children}</p>
 );
 
 // ------------------------------------------------------------------ chips
@@ -97,7 +97,7 @@ const TONES = {
 
 export function Chip({ children, tone = 'neutral', title }: { children: ReactNode; tone?: keyof typeof TONES; title?: string }) {
   return (
-    <span title={title} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${TONES[tone]}`}>
+    <span title={title} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${TONES[tone]}`}>
       {children}
     </span>
   );
@@ -113,7 +113,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
           type="button"
           aria-pressed={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${value === o.value ? 'bg-white text-ink' : 'text-white/80 hover:text-white'}`}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${value === o.value ? 'bg-white text-ink' : 'text-white/80 hover:text-white'}`}
         >
           {o.label}
         </button>
@@ -126,8 +126,8 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
 export function DateBlock({ top, bottom, className = '' }: { top: string; bottom: string; className?: string }) {
   return (
     <div className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[18px] bg-ink leading-none text-white ${className}`}>
-      <span className="text-lg font-bold">{top}</span>
-      <span className="mt-0.5 text-[11px] font-semibold opacity-80">{bottom}</span>
+      <span className="text-lg font-semibold">{top}</span>
+      <span className="mt-0.5 text-[11px] font-medium opacity-80">{bottom}</span>
     </div>
   );
 }
@@ -138,7 +138,7 @@ export function EmptyState({ icon, title, children }: { icon: ReactNode; title: 
   return (
     <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-card-lime text-ink">{icon}</div>
-      <h3 className="text-lg font-bold">{title}</h3>
+      <h3 className="text-lg font-semibold">{title}</h3>
       {children && <div className="max-w-sm text-sm text-muted">{children}</div>}
     </div>
   );

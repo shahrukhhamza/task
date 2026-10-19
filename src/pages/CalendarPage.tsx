@@ -46,8 +46,8 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
   return (
     <div className="grid gap-5">
       <header className="lg:mb-2">
-        <p className="text-sm font-semibold text-muted">{monthLabel}</p>
-        <h1 className="mt-1 text-[32px] font-bold leading-none tracking-tight lg:text-[40px]">Calendar</h1>
+        <p className="text-sm font-medium text-muted">{monthLabel}</p>
+        <h1 className="mt-1 text-[32px] font-semibold leading-none tracking-tight lg:text-[40px]">Calendar</h1>
       </header>
 
       <div role="tablist" aria-label="Days" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
@@ -65,8 +65,8 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
                 selected ? 'bg-ink text-white shadow-lg dark:bg-white dark:text-ink' : 'bg-surface text-fg ring-1 ring-line hover:brightness-95'
               }`}
             >
-              <span className="text-xs font-semibold opacity-70">{d.i === 0 ? 'Today' : weekday(d.start)}</span>
-              <span className="text-xl font-bold">{dateNum(d.start)}</span>
+              <span className="text-xs font-medium opacity-70">{d.i === 0 ? 'Today' : weekday(d.start)}</span>
+              <span className="text-xl font-semibold">{dateNum(d.start)}</span>
               <span className={`h-1.5 w-1.5 rounded-full ${d.items.length ? (selected ? 'bg-card-lime' : 'bg-fg/50') : 'bg-transparent'}`} aria-hidden />
             </button>
           );
@@ -76,14 +76,14 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
       <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-6">
         <section aria-label={formatDayLabel(day.start, tz, now)} className="rounded-[28px] bg-surface p-4 ring-1 ring-line lg:p-5">
           <div className="mb-3 flex items-baseline justify-between px-1">
-            <h2 className="text-xl font-bold">{formatDayLabel(day.start, tz, now)}</h2>
-            {day.minutes > 0 && <span className="text-sm font-semibold text-muted">{formatDuration(day.minutes)} planned</span>}
+            <h2 className="text-xl font-semibold">{formatDayLabel(day.start, tz, now)}</h2>
+            {day.minutes > 0 && <span className="text-sm font-medium text-muted">{formatDuration(day.minutes)} planned</span>}
           </div>
           {day.items.length ? (
             <DayList items={day.items} tz={tz} now={now} />
           ) : (
             <div className="rounded-[20px] bg-surface-2/70 p-8 text-center">
-              <p className="font-bold">A free day</p>
+              <p className="font-semibold">A free day</p>
               <p className="mt-1 text-sm text-muted">Nothing planned yet.</p>
             </div>
           )}
@@ -92,7 +92,7 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
         <Bento tone="sky" className="grid gap-4">
           <div>
             <Kicker>Deadlines</Kicker>
-            <h2 className="text-2xl font-bold leading-tight">
+            <h2 className="text-2xl font-semibold leading-tight">
               {deadlines.length === 0
                 ? 'No deadlines coming up'
                 : atRisk
@@ -100,7 +100,7 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
                   : `${deadlines.length} coming up, all on track`}
             </h2>
           </div>
-          {deadlines.length === 0 && <p className="text-sm font-semibold opacity-75">Try adding “report due Friday”.</p>}
+          {deadlines.length === 0 && <p className="text-sm font-medium opacity-75">Try adding “report due Friday”.</p>}
           <ul className="grid gap-2">
             {deadlines.map((task) => {
               const risk = livePlan.risks.find((r) => r.taskId === task.id);
@@ -111,25 +111,25 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
                 <li key={task.id} className="rounded-[22px] bg-white/70 p-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-2xl bg-ink leading-none text-white">
-                      <span className="text-base font-bold">{dateNum(due)}</span>
-                      <span className="mt-0.5 text-[10px] font-bold opacity-80">{weekday(due)}</span>
+                      <span className="text-base font-semibold">{dateNum(due)}</span>
+                      <span className="mt-0.5 text-[10px] font-semibold opacity-80">{weekday(due)}</span>
                     </div>
                     <button type="button" onClick={() => select(task.id)} className="min-w-0 flex-1 text-left">
-                      <span className="block truncate font-bold">{task.title}</span>
-                      <span className="block text-sm font-semibold opacity-70">Due {formatDayLabel(due, tz, now).toLowerCase()}{endOfDay ? '' : ` at ${formatTime(due, tz)}`}</span>
+                      <span className="block truncate font-semibold">{task.title}</span>
+                      <span className="block text-sm font-medium opacity-70">Due {formatDayLabel(due, tz, now).toLowerCase()}{endOfDay ? '' : ` at ${formatTime(due, tz)}`}</span>
                     </button>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${risk ? 'bg-card-coral' : 'bg-card-lime'}`}>{status}</span>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${risk ? 'bg-card-coral' : 'bg-card-lime'}`}>{status}</span>
                   </div>
                   {risk?.kind === 'miss' && (
                     <div className="mt-3 grid gap-2">
-                      <p className="text-sm font-semibold">{risk.message}</p>
+                      <p className="text-sm font-medium">{risk.message}</p>
                       <div className="flex flex-wrap gap-2">
                         {risk.suggestions.map((s, i) =>
                           s.taskId && s.action !== 'extend' ? (
                             <button
                               key={i}
                               type="button"
-                              className="rounded-full bg-ink px-3.5 py-2 text-xs font-bold text-white"
+                              className="rounded-full bg-ink px-3.5 py-2 text-xs font-semibold text-white"
                               onClick={async () => {
                                 const undo = await applySuggestion(s.taskId as string, s.action as 'move' | 'drop', s.startAfter);
                                 toast('Plan updated.', { undo });
@@ -138,7 +138,7 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
                               {s.text}
                             </button>
                           ) : (
-                            <span key={i} className="text-xs font-semibold opacity-75">
+                            <span key={i} className="text-xs font-medium opacity-75">
                               {s.text}
                             </span>
                           ),

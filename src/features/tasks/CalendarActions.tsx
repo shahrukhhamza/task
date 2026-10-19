@@ -55,7 +55,7 @@ export function CalendarActions({ task, timezone }: { task: Task; timezone: stri
             href={template}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 h-9 rounded-full bg-surface-2 px-3.5 text-sm font-semibold hover:brightness-95"
+            className="inline-flex items-center gap-1.5 h-9 rounded-full bg-surface-2 px-3.5 text-sm font-medium hover:brightness-95"
           >
             <ExternalLink size={14} /> Add to Google Calendar
           </a>

@@ -19,7 +19,7 @@ export function NotificationsSection({ profile }: { profile: Profile }) {
   if (!notificationsSupported()) {
     return (
       <Card className="grid gap-2">
-        <h2 className="flex items-center gap-2 font-semibold">
+        <h2 className="flex items-center gap-2 font-medium">
           <BellOff size={18} /> Reminders
         </h2>
         <p className="text-sm text-muted">This browser can’t show notifications. On iPhone, add Dayflow to your Home Screen first.</p>
@@ -56,7 +56,7 @@ export function NotificationsSection({ profile }: { profile: Profile }) {
 
   return (
     <Card className="grid gap-3">
-      <h2 className="flex items-center gap-2 font-semibold">
+      <h2 className="flex items-center gap-2 font-medium">
         <Bell size={18} /> Reminders
       </h2>
       <p className="text-sm text-muted">

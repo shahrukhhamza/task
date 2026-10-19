@@ -22,7 +22,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
     if (!this.state.error) return this.props.children;
     return (
       <div role="alert" className="mx-auto mt-16 max-w-md rounded-2xl bg-surface p-6 text-center">
-        <h1 className="text-lg font-semibold">Something went wrong</h1>
+        <h1 className="text-lg font-medium">Something went wrong</h1>
         <p className="mt-2 text-sm text-muted">
           Your data is safe on this device. Reloading usually fixes it. If it keeps happening, download a backup first.
         </p>
@@ -38,7 +38,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
           >
             Download my data
           </button>
-          <button type="button" className="rounded-lg bg-fg px-4 py-2 text-sm font-semibold text-app" onClick={() => location.reload()}>
+          <button type="button" className="rounded-lg bg-fg px-4 py-2 text-sm font-medium text-app" onClick={() => location.reload()}>
             Reload
           </button>
         </div>

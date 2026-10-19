@@ -2,7 +2,7 @@ import { WifiOff } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { BottomNav } from './components/BottomNav';
-import { Backdrop, Sidebar } from './components/Sidebar';
+import { Sidebar } from './components/Sidebar';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toasts } from './components/Toasts';
 import { Skeleton } from './components/ui';
@@ -58,13 +58,12 @@ function Shell() {
 
       {!online && (
         <div className="fixed inset-x-0 top-0 z-50 flex justify-center pt-[max(0.5rem,env(safe-area-inset-top))]">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white shadow-lg">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-xs font-medium text-white shadow-lg">
             <WifiOff size={13} /> Offline · everything still works
           </span>
         </div>
       )}
 
-      <Backdrop />
       <Sidebar />
 
       <main

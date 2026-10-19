@@ -10,7 +10,7 @@ export function ReconnectBanner() {
   if (!user || google !== 'reconnect') return null;
   return (
     <Bento tone="coral" className="mb-4 flex items-center gap-3 !py-4" role="alert">
-      <p className="min-w-0 flex-1 font-semibold">Google Calendar needs reconnecting, so new events aren’t coming in.</p>
+      <p className="min-w-0 flex-1 font-medium">Google Calendar needs reconnecting, so new events aren’t coming in.</p>
       <IconButton label="Reconnect Google" onClick={() => void signInWithGoogle()}>
         <RefreshCw size={18} />
       </IconButton>

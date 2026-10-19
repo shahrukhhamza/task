@@ -42,14 +42,14 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | 'new'; onClose:
         <input
           id="habit-title"
           autoFocus
-          className="w-full bg-transparent text-2xl font-bold placeholder:text-muted focus:outline-none"
+          className="w-full bg-transparent text-2xl font-semibold placeholder:text-muted focus:outline-none"
           value={title}
           placeholder="Read 20 pages"
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
       <div>
-        <p className="mb-2 text-sm font-semibold">Repeat on</p>
+        <p className="mb-2 text-sm font-medium">Repeat on</p>
         <div role="group" aria-label="Days" className="flex gap-1.5">
           {LETTERS.map((letter, d) => {
             const on = days.includes(d);
@@ -60,7 +60,7 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | 'new'; onClose:
                 aria-pressed={on}
                 aria-label={NAMES[d]}
                 onClick={() => setDays(on ? days.filter((x) => x !== d) : [...days, d].sort())}
-                className={`h-11 w-11 rounded-full text-sm font-bold transition ${on ? 'bg-fg text-app' : 'bg-surface-2 text-fg'}`}
+                className={`h-11 w-11 rounded-full text-sm font-semibold transition ${on ? 'bg-fg text-app' : 'bg-surface-2 text-fg'}`}
               >
                 {letter}
               </button>
@@ -68,14 +68,14 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | 'new'; onClose:
           })}
         </div>
         <div className="mt-3 flex gap-2">
-          <button type="button" className="rounded-full bg-surface-2 px-3.5 py-1.5 text-sm font-semibold" onClick={() => setDays(ALL_DAYS)}>
+          <button type="button" className="rounded-full bg-surface-2 px-3.5 py-1.5 text-sm font-medium" onClick={() => setDays(ALL_DAYS)}>
             Every day
           </button>
-          <button type="button" className="rounded-full bg-surface-2 px-3.5 py-1.5 text-sm font-semibold" onClick={() => setDays(WEEKDAYS)}>
+          <button type="button" className="rounded-full bg-surface-2 px-3.5 py-1.5 text-sm font-medium" onClick={() => setDays(WEEKDAYS)}>
             Weekdays
           </button>
         </div>
-        {days.length === 0 && <p className="mt-2 text-sm font-semibold text-red-700 dark:text-red-300">Pick at least one day.</p>}
+        {days.length === 0 && <p className="mt-2 text-sm font-medium text-red-700 dark:text-red-300">Pick at least one day.</p>}
       </div>
       <div className="flex items-center justify-between gap-2">
         {habit !== 'new' ? (

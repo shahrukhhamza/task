@@ -102,7 +102,7 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
       {task && !editing && (
         <div className="grid gap-5">
           <div>
-            <h2 className={`text-[28px] font-bold leading-tight ${task.status === 'done' ? 'text-muted line-through' : ''}`}>{task.title}</h2>
+            <h2 className={`text-[28px] font-semibold leading-tight ${task.status === 'done' ? 'text-muted line-through' : ''}`}>{task.title}</h2>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {task.status === 'done' && <Chip tone="teal">Done</Chip>}
               {task.priority !== 'med' && <Chip tone={task.priority === 'high' ? 'red' : 'neutral'}>{PRIORITY[task.priority]}</Chip>}
@@ -114,7 +114,7 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
           </div>
 
           {(when || nextBlock) && (
-            <div className="grid gap-1 rounded-[20px] bg-surface-2 p-4 text-sm font-semibold">
+            <div className="grid gap-1 rounded-[20px] bg-surface-2 p-4 text-sm font-medium">
               {when && (
                 <p className="flex items-center gap-2">
                   <Clock size={16} className="text-muted" /> {when}
@@ -129,9 +129,9 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
             </div>
           )}
 
-          {risk && <p className="rounded-[20px] bg-card-sun p-4 text-sm font-semibold text-ink">{risk.message}</p>}
+          {risk && <p className="rounded-[20px] bg-card-sun p-4 text-sm font-medium text-ink">{risk.message}</p>}
           {learned !== undefined && learned !== task.estimateMin && (
-            <p className="rounded-[20px] bg-card-lilac p-4 text-sm font-semibold text-ink">
+            <p className="rounded-[20px] bg-card-lilac p-4 text-sm font-medium text-ink">
               Planned as {formatDuration(learned)}: your {task.category} tasks usually take {learned > task.estimateMin ? 'longer' : 'less'} than you estimate.
             </p>
           )}
@@ -143,7 +143,7 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
           ) : (
             <div className="grid grid-cols-2 gap-2">
               {task.fixedStart === undefined ? (
-                <button type="button" onClick={() => startFocus(task.id)} className="flex h-14 items-center justify-center gap-2 rounded-full bg-card-lime font-bold text-ink">
+                <button type="button" onClick={() => startFocus(task.id)} className="flex h-14 items-center justify-center gap-2 rounded-full bg-card-lime font-semibold text-ink">
                   <Play size={18} fill="currentColor" /> Start focus
                 </button>
               ) : (
@@ -152,7 +152,7 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
               <button
                 type="button"
                 onClick={() => run(() => completeTask(task.id), `Done: “${task.title}”. Nice.`)}
-                className={`flex h-14 items-center justify-center gap-2 rounded-full bg-fg font-bold text-app ${task.fixedStart !== undefined ? 'col-span-2' : ''}`}
+                className={`flex h-14 items-center justify-center gap-2 rounded-full bg-fg font-semibold text-app ${task.fixedStart !== undefined ? 'col-span-2' : ''}`}
               >
                 <Check size={18} strokeWidth={3} /> Done
               </button>

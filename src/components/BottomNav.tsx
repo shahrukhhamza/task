@@ -26,7 +26,7 @@ function Item({ to, label, icon: Icon }: (typeof LEFT)[number]) {
       {({ isActive }) => (
         <>
           <Icon size={21} strokeWidth={2.2} aria-hidden />
-          {isActive && <span className="text-sm font-bold">{label}</span>}
+          {isActive && <span className="text-sm font-semibold">{label}</span>}
         </>
       )}
     </NavLink>

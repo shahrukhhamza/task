@@ -48,11 +48,11 @@ export function AiSection() {
         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white">
           <Sparkles size={20} />
         </span>
-        <h2 className="mt-4 text-2xl font-bold">Smart assistant</h2>
-        <p className="mt-1 font-semibold opacity-70">Gemini makes Dayflow understand you better. Free, optional, and off unless you turn it on.</p>
+        <h2 className="mt-4 text-2xl font-semibold">Smart assistant</h2>
+        <p className="mt-1 font-medium opacity-70">Gemini makes Dayflow understand you better. Free, optional, and off unless you turn it on.</p>
         <ul className="mt-4 grid gap-2">
           {PERKS.map((p) => (
-            <li key={p} className="flex items-start gap-2 text-sm font-semibold">
+            <li key={p} className="flex items-start gap-2 text-sm font-medium">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink" /> {p}
             </li>
           ))}
@@ -64,7 +64,7 @@ export function AiSection() {
           <>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="font-bold">Connected</p>
+                <p className="font-semibold">Connected</p>
                 <p className="text-sm text-muted">Using {ai.model || 'Gemini Flash'} with your key</p>
               </div>
               <Segmented
@@ -77,7 +77,7 @@ export function AiSection() {
                 ]}
               />
             </div>
-            {ai.error && <p className="rounded-2xl bg-card-coral p-3 text-sm font-semibold text-ink">{ai.error}</p>}
+            {ai.error && <p className="rounded-2xl bg-card-coral p-3 text-sm font-medium text-ink">{ai.error}</p>}
             <Button size="sm" variant="ghost" className="justify-self-start" onClick={() => ai.update({ key: '', model: '', enabled: false })}>
               Remove key from this device
             </Button>
@@ -85,7 +85,7 @@ export function AiSection() {
         ) : (
           <>
             <div>
-              <label htmlFor="gemini-key" className="mb-1.5 block text-sm font-semibold">
+              <label htmlFor="gemini-key" className="mb-1.5 block text-sm font-medium">
                 Gemini API key
               </label>
               <div className="flex gap-2">
@@ -110,28 +110,28 @@ export function AiSection() {
                 </Button>
               </div>
               {error && (
-                <p role="alert" className="mt-2 text-sm font-semibold text-red-700 dark:text-red-300">
+                <p role="alert" className="mt-2 text-sm font-medium text-red-700 dark:text-red-300">
                   {error}
                 </p>
               )}
             </div>
             <ol className="grid gap-1.5 rounded-[20px] bg-surface-2 p-4 text-sm">
               <li>
-                <span className="font-bold">1.</span> Open{' '}
-                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="font-bold underline">
+                <span className="font-semibold">1.</span> Open{' '}
+                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="font-semibold underline">
                   aistudio.google.com/apikey
                 </a>{' '}
                 and sign in with Google.
               </li>
               <li>
-                <span className="font-bold">2.</span> Click <span className="font-bold">Create API key</span> (free, no card needed).
+                <span className="font-semibold">2.</span> Click <span className="font-semibold">Create API key</span> (free, no card needed).
               </li>
               <li>
-                <span className="font-bold">3.</span> Copy it, paste it above and press Connect.
+                <span className="font-semibold">3.</span> Copy it, paste it above and press Connect.
               </li>
             </ol>
             {signedIn && (
-              <label className="flex items-center gap-3 text-sm font-semibold">
+              <label className="flex items-center gap-3 text-sm font-medium">
                 <input type="checkbox" className="h-5 w-5 accent-[var(--app-fg)]" checked={ai.enabled} onChange={(e) => ai.update({ enabled: e.target.checked })} />
                 Use the server’s key instead, if it has one
               </label>

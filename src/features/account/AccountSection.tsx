@@ -38,7 +38,7 @@ export function AccountSection() {
   if (!cloud.configured) {
     return (
       <Card className="grid gap-2">
-        <h2 className="flex items-center gap-2 font-semibold">
+        <h2 className="flex items-center gap-2 font-medium">
           <CloudOff size={18} /> Account & sync
         </h2>
         <p className="text-sm text-muted">
@@ -60,7 +60,7 @@ export function AccountSection() {
   if (!cloud.user) {
     return (
       <Card className="grid gap-3">
-        <h2 className="font-semibold">Account & sync</h2>
+        <h2 className="font-medium">Account & sync</h2>
         <p className="text-sm text-muted">
           Sign in to back up your plan, use it on all your devices, connect Google Calendar and get a nightly summary by email. Everything
           already on this device is uploaded when you sign in.
@@ -79,12 +79,12 @@ export function AccountSection() {
         {cloud.user.avatarUrl ? (
           <img src={cloud.user.avatarUrl} alt="" className="h-10 w-10 rounded-full" referrerPolicy="no-referrer" />
         ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-card-lime font-bold text-ink">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-card-lime font-semibold text-ink">
             {(cloud.user.name ?? cloud.user.email).slice(0, 1).toUpperCase()}
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold">{cloud.user.name ?? cloud.user.email}</p>
+          <p className="truncate font-medium">{cloud.user.name ?? cloud.user.email}</p>
           <p className="truncate text-sm text-muted">{cloud.user.email}</p>
         </div>
         <Button size="sm" variant="ghost" onClick={() => run('signout', signOut, 'Signed out. Your data stays on this device.')}>

@@ -23,7 +23,7 @@ interface TaskFormProps {
   timezone: string;
 }
 
-const label = 'mb-1.5 block text-sm font-semibold';
+const label = 'mb-1.5 block text-sm font-medium';
 
 function PillChoice<T extends string | number>({ options, value, onChange, name }: { options: Array<{ value: T; label: string }>; value: T | undefined; onChange: (v: T) => void; name: string }) {
   return (
@@ -34,7 +34,7 @@ function PillChoice<T extends string | number>({ options, value, onChange, name 
           type="button"
           aria-pressed={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${value === o.value ? 'bg-fg text-app' : 'bg-surface-2 text-fg hover:brightness-95'}`}
+          className={`rounded-full px-4 py-2 text-sm font-medium transition ${value === o.value ? 'bg-fg text-app' : 'bg-surface-2 text-fg hover:brightness-95'}`}
         >
           {o.label}
         </button>
@@ -83,7 +83,7 @@ export function TaskForm({ value, onChange, timezone }: TaskFormProps) {
         </label>
         <input
           id={`${id}-title`}
-          className="w-full bg-transparent text-2xl font-bold text-fg placeholder:text-muted focus:outline-none"
+          className="w-full bg-transparent text-2xl font-semibold text-fg placeholder:text-muted focus:outline-none"
           value={value.title}
           placeholder="What do you need to do?"
           onChange={(e) => set({ title: e.target.value })}
@@ -159,7 +159,7 @@ export function TaskForm({ value, onChange, timezone }: TaskFormProps) {
           type="button"
           aria-expanded={more}
           onClick={() => setMore(!more)}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-fg"
+          className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-fg"
         >
           More options <ChevronDown size={16} className={`transition ${more ? 'rotate-180' : ''}`} />
         </button>
@@ -185,7 +185,7 @@ export function TaskForm({ value, onChange, timezone }: TaskFormProps) {
             </div>
             {value.recurrence && (
               <div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-card-lilac px-3 py-1.5 text-sm font-semibold text-ink">
+                <span className="inline-flex items-center gap-1 rounded-full bg-card-lilac px-3 py-1.5 text-sm font-medium text-ink">
                   Repeats: {describeRecurrence(value.recurrence)}
                   <button type="button" aria-label="Stop repeating" onClick={() => set({ recurrence: undefined })}>
                     <X size={14} />
@@ -193,7 +193,7 @@ export function TaskForm({ value, onChange, timezone }: TaskFormProps) {
                 </span>
               </div>
             )}
-            <label className="inline-flex items-center gap-3 text-sm font-semibold">
+            <label className="inline-flex items-center gap-3 text-sm font-medium">
               <input
                 type="checkbox"
                 checked={!!value.addToCalendar}

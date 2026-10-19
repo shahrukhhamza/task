@@ -30,18 +30,18 @@ export function Sheet({ open, onClose, title, children, wide, bare }: SheetProps
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      className={`m-0 mt-auto max-h-[92dvh] w-full overflow-y-auto rounded-t-[32px] bg-surface p-0 text-fg shadow-2xl sm:m-auto sm:rounded-[32px] ${wide ? 'max-w-2xl' : 'max-w-lg'}`}
+      className={`m-0 mt-auto max-h-[92dvh] w-full overflow-y-auto rounded-t-[28px] border border-line bg-surface p-0 text-fg shadow-[0_24px_80px_-20px_rgb(0_0_0/0.35)] sm:m-auto sm:rounded-[24px] ${wide ? 'max-w-2xl' : 'max-w-xl'}`}
     >
       {open && (
-        <div className="px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3">
+        <div className="px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pt-5">
           <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-fg/15 sm:hidden" aria-hidden />
           <div className={`flex items-start justify-between gap-3 ${bare ? 'mb-1' : 'mb-4'}`}>
-            <h2 className={bare ? 'sr-only' : 'text-xl font-bold'}>{title}</h2>
+            <h2 className={bare ? 'sr-only' : 'text-lg font-semibold'}>{title}</h2>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="-mr-1 ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-fg hover:brightness-95"
+              className="-mr-1 ml-auto flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-fg"
             >
               <X size={18} />
             </button>

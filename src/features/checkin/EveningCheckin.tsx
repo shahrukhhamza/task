@@ -24,7 +24,7 @@ const ENERGY = [
 function Scale({ legend, items, value, onChange }: { legend: string; items: typeof MOODS; value: Score | null; onChange: (v: Score) => void }) {
   return (
     <fieldset>
-      <legend className="mb-2 text-sm font-bold">{legend}</legend>
+      <legend className="mb-2 text-sm font-semibold">{legend}</legend>
       <div className="grid grid-cols-5 gap-1.5">
         {items.map((item, i) => {
           const v = (i + 1) as Score;
@@ -35,7 +35,7 @@ function Scale({ legend, items, value, onChange }: { legend: string; items: type
               aria-pressed={value === v}
               aria-label={`${item.label} (${v} of 5)`}
               onClick={() => onChange(v)}
-              className={`flex flex-col items-center rounded-2xl py-2 text-xs font-bold transition ${value === v ? 'bg-ink text-white' : 'bg-white/60 hover:bg-white'}`}
+              className={`flex flex-col items-center rounded-2xl py-2 text-xs font-semibold transition ${value === v ? 'bg-ink text-white' : 'bg-white/60 hover:bg-white'}`}
             >
               <span className="text-xl" aria-hidden>
                 {item.emoji}
@@ -65,7 +65,7 @@ export function EveningCheckin({ date, existing, hour }: { date: string; existin
         <span className="text-xl" aria-hidden>
           {MOODS[existing.mood - 1].emoji}
         </span>
-        <span className="flex-1 font-semibold">
+        <span className="flex-1 font-medium">
           Checked in: feeling {MOODS[existing.mood - 1].label.toLowerCase()}, energy {ENERGY[existing.energy - 1].label.toLowerCase()}
         </span>
         <button type="button" aria-label="Edit check-in" onClick={() => setEditing(true)} className="rounded-full p-2 hover:bg-surface-2">
@@ -81,7 +81,7 @@ export function EveningCheckin({ date, existing, hour }: { date: string; existin
         <Moon size={18} />
         <Kicker>Evening check-in</Kicker>
       </div>
-      <h2 className="-mt-2 text-2xl font-bold leading-tight">How was today?</h2>
+      <h2 className="-mt-2 text-2xl font-semibold leading-tight">How was today?</h2>
       <Scale legend="Mood" items={MOODS} value={mood} onChange={setMood} />
       <Scale legend="Energy" items={ENERGY} value={energy} onChange={setEnergy} />
       <button
@@ -93,7 +93,7 @@ export function EveningCheckin({ date, existing, hour }: { date: string; existin
           setEditing(false);
           toast('Saved. Sleep well.');
         }}
-        className="h-12 rounded-full bg-ink font-bold text-white transition disabled:opacity-40"
+        className="h-12 rounded-full bg-ink font-semibold text-white transition disabled:opacity-40"
       >
         Save check-in
       </button>

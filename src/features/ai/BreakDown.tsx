@@ -52,7 +52,7 @@ export function BreakDown({ task, onDone }: { task: Task; onDone: () => void }) 
           type="button"
           onClick={() => void ask()}
           disabled={loading}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card-lilac px-3.5 text-sm font-semibold text-ink disabled:opacity-70"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card-lilac px-3.5 text-sm font-medium text-ink disabled:opacity-70"
         >
           {loading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />} {loading ? 'Thinking…' : 'Break it down'}
         </button>
@@ -63,7 +63,7 @@ export function BreakDown({ task, onDone }: { task: Task; onDone: () => void }) 
 
   return (
     <div className="grid gap-3 rounded-[22px] bg-card-lilac p-4 text-ink">
-      <p className="flex items-center gap-2 font-bold">
+      <p className="flex items-center gap-2 font-semibold">
         <Sparkles size={16} /> Suggested steps
       </p>
       <ul className="grid gap-1.5">
@@ -86,18 +86,18 @@ export function BreakDown({ task, onDone }: { task: Task; onDone: () => void }) 
                 <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-ink ${on ? 'bg-ink text-white' : ''}`}>
                   {on && <Check size={13} strokeWidth={3} />}
                 </span>
-                <span className="flex-1 font-semibold">{s.title}</span>
-                <span className="text-sm font-semibold opacity-70">{formatDuration(s.durationMin)}</span>
+                <span className="flex-1 font-medium">{s.title}</span>
+                <span className="text-sm font-medium opacity-70">{formatDuration(s.durationMin)}</span>
               </button>
             </li>
           );
         })}
       </ul>
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={() => setSteps(null)} className="rounded-full px-4 py-2 text-sm font-semibold">
+        <button type="button" onClick={() => setSteps(null)} className="rounded-full px-4 py-2 text-sm font-medium">
           Cancel
         </button>
-        <button type="button" disabled={!chosen.size} onClick={() => void apply()} className="rounded-full bg-ink px-4 py-2 text-sm font-bold text-white disabled:opacity-40">
+        <button type="button" disabled={!chosen.size} onClick={() => void apply()} className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">
           Use {chosen.size} {chosen.size === 1 ? 'step' : 'steps'}
         </button>
       </div>

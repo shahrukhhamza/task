@@ -32,8 +32,8 @@ function readView(): 'list' | 'timeline' {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 rounded-[22px] bg-surface p-3 ring-1 ring-line sm:p-4">
-      <p className="truncate text-xs font-semibold text-muted">{label}</p>
-      <p className="mt-1 truncate text-lg font-bold tracking-tight sm:text-2xl">{value}</p>
+      <p className="truncate text-xs font-medium text-muted">{label}</p>
+      <p className="mt-1 truncate text-lg font-semibold tracking-tight sm:text-2xl">{value}</p>
     </div>
   );
 }
@@ -122,8 +122,8 @@ export function TodayPage({ data }: { data: PlannerData }) {
     <div>
       <header className="mb-6 flex items-end gap-3 lg:mb-8">
         <div>
-          <p className="text-sm font-semibold text-muted">{longDate}</p>
-          <h1 className="mt-1 text-[32px] font-bold leading-none tracking-tight lg:text-[40px]">
+          <p className="text-sm font-medium text-muted">{longDate}</p>
+          <h1 className="mt-1 text-[32px] font-semibold leading-none tracking-tight lg:text-[40px]">
             {greeting(hour)}
             {name ? `, ${name}` : ''}
           </h1>
@@ -131,7 +131,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
         <Link
           to="/settings"
           aria-label="Settings and account"
-          className="ml-auto flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-surface text-lg font-bold ring-2 ring-card-lime lg:hidden"
+          className="ml-auto flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-surface text-lg font-semibold ring-2 ring-card-lime lg:hidden"
         >
           {user?.avatarUrl ? <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" /> : name ? name[0] : <Sparkles size={20} />}
         </Link>
@@ -155,21 +155,21 @@ export function TodayPage({ data }: { data: PlannerData }) {
 
               {stats.total === 0 ? (
                 <>
-                  <h2 className="mt-3 max-w-md text-[34px] font-bold leading-[1.05] tracking-tight lg:text-[44px]">Your day is wide open</h2>
-                  <p className="mt-3 max-w-sm font-semibold opacity-70">Tell Dayflow what’s on your mind and it will find the time.</p>
-                  <button type="button" onClick={() => openAdd()} className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 font-bold text-white">
+                  <h2 className="mt-3 max-w-md text-[34px] font-semibold leading-[1.05] tracking-tight lg:text-[44px]">Your day is wide open</h2>
+                  <p className="mt-3 max-w-sm font-medium opacity-70">Tell Dayflow what’s on your mind and it will find the time.</p>
+                  <button type="button" onClick={() => openAdd()} className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 font-semibold text-white">
                     <Plus size={18} /> Add your first task
                   </button>
                 </>
               ) : stats.remaining === 0 ? (
                 <>
-                  <h2 className="mt-3 text-[34px] font-bold leading-[1.05] tracking-tight lg:text-[44px]">All done for today</h2>
-                  <p className="mt-3 font-semibold opacity-70">Well played. Enjoy the rest of your day.</p>
+                  <h2 className="mt-3 text-[34px] font-semibold leading-[1.05] tracking-tight lg:text-[44px]">All done for today</h2>
+                  <p className="mt-3 font-medium opacity-70">Well played. Enjoy the rest of your day.</p>
                 </>
               ) : (
-                <h2 className="mt-3 max-w-lg text-[34px] font-bold leading-[1.12] tracking-tight lg:text-[44px]">
+                <h2 className="mt-3 max-w-lg text-[34px] font-semibold leading-[1.12] tracking-tight lg:text-[44px]">
                   {stats.remaining} {stats.remaining === 1 ? 'thing' : 'things'} to do{' '}
-                  <span className="inline-flex -translate-y-1.5 items-center gap-1 rounded-full bg-white px-3 py-1 align-middle text-sm font-bold">
+                  <span className="inline-flex -translate-y-1.5 items-center gap-1 rounded-full bg-white px-3 py-1 align-middle text-sm font-semibold">
                     {stats.feasibility.canFinish ? (
                       <>
                         <Check size={14} strokeWidth={3} /> All fits
@@ -196,7 +196,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
                   >
                     <div className="h-full rounded-full bg-ink transition-all" style={{ width: `${Math.max(pct, 3)}%` }} />
                   </div>
-                  <span className="shrink-0 text-sm font-bold">
+                  <span className="shrink-0 text-sm font-semibold">
                     {stats.done}/{stats.total} done
                   </span>
                 </div>
@@ -215,10 +215,10 @@ export function TodayPage({ data }: { data: PlannerData }) {
           {stats.missed > 0 && stats.remaining > 0 && (
             <Bento tone="coral" className="rise flex items-center gap-4">
               <div className="min-w-0 flex-1">
-                <p className="text-lg font-bold">
+                <p className="text-lg font-semibold">
                   {stats.missed} {stats.missed === 1 ? 'block' : 'blocks'} slipped by
                 </p>
-                <p className="text-sm font-semibold opacity-75">Re-plan the rest of today in one tap.</p>
+                <p className="text-sm font-medium opacity-75">Re-plan the rest of today in one tap.</p>
               </div>
               <IconButton
                 label="Re-plan from now"
@@ -236,7 +236,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
           {risk && stats.missed === 0 && (
             <Bento tone="sun" className="rise flex items-center gap-4">
               <TriangleAlert size={22} className="shrink-0" />
-              <p className="min-w-0 flex-1 font-semibold">{risk.message}</p>
+              <p className="min-w-0 flex-1 font-medium">{risk.message}</p>
               <Link to="/calendar" aria-label="See how to fix it" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ink text-white">
                 <ArrowUpRight size={19} />
               </Link>
@@ -254,7 +254,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
                   <button
                     type="button"
                     onClick={() => void brief.refresh()}
-                    className={`ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${brief.stale ? 'bg-ink text-white' : 'bg-white/60 hover:bg-white'}`}
+                    className={`ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${brief.stale ? 'bg-ink text-white' : 'bg-white/60 hover:bg-white'}`}
                   >
                     <RefreshCw size={13} /> {brief.stale ? 'Plan changed · refresh' : 'Refresh'}
                   </button>
@@ -266,9 +266,9 @@ export function TodayPage({ data }: { data: PlannerData }) {
                   <div className="h-3.5 w-3/4 animate-pulse rounded-full bg-ink/10" />
                 </div>
               ) : brief.text ? (
-                <p className="mt-3 text-[17px] font-semibold leading-relaxed">{brief.text}</p>
+                <p className="mt-3 text-[17px] font-medium leading-relaxed">{brief.text}</p>
               ) : (
-                <p className="mt-3 text-sm font-semibold opacity-75">{brief.error}</p>
+                <p className="mt-3 text-sm font-medium opacity-75">{brief.error}</p>
               )}
             </Bento>
           )}
@@ -277,9 +277,9 @@ export function TodayPage({ data }: { data: PlannerData }) {
             <Bento tone="cream" className="rise flex items-center gap-4">
               <DateBlock top={nextTime[0]} bottom={nextTime[1]} className="!h-16 !w-16" />
               <button type="button" disabled={!next.task} onClick={() => next.task && select(next.task.id)} className="min-w-0 flex-1 text-left">
-                <p className="text-xs font-bold uppercase tracking-wider opacity-70">{next.start <= now ? 'Happening now' : 'Up next'}</p>
-                <p className="truncate text-xl font-bold">{next.title}</p>
-                <p className="text-sm font-semibold opacity-65">
+                <p className="text-xs font-semibold uppercase tracking-wider opacity-70">{next.start <= now ? 'Happening now' : 'Up next'}</p>
+                <p className="truncate text-xl font-semibold">{next.title}</p>
+                <p className="text-sm font-medium opacity-65">
                   {next.start <= now
                     ? `Until ${formatTime(next.end, tz)}`
                     : `In ${formatDuration(Math.max(1, Math.round((next.start - now) / MIN)))} · ${formatDuration((next.end - next.start) / MIN)}`}
@@ -308,7 +308,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
         <div className="grid gap-5 lg:col-span-5">
           <section aria-label="Your day" className="rounded-[28px] bg-surface p-4 ring-1 ring-line lg:p-5">
             <div className="mb-3 flex items-center justify-between gap-2 px-1">
-              <h2 className="text-lg font-bold">Your day</h2>
+              <h2 className="text-lg font-semibold">Your day</h2>
               {items.length > 0 && (
                 <Segmented
                   label="View"
@@ -331,7 +331,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
 
             {items.length === 0 ? (
               <div className="rounded-[20px] bg-surface-2/70 p-8 text-center">
-                <p className="font-bold">Nothing scheduled</p>
+                <p className="font-semibold">Nothing scheduled</p>
                 <p className="mt-1 text-sm text-muted">Add something and it shows up here.</p>
               </div>
             ) : view === 'list' ? (
@@ -342,7 +342,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
 
             {stats.doneTasks.length > 0 && (
               <div className="mt-4 border-t border-line pt-4">
-                <h3 className="mb-2 px-1 text-sm font-bold text-muted">Done today · {stats.doneTasks.length}</h3>
+                <h3 className="mb-2 px-1 text-sm font-semibold text-muted">Done today · {stats.doneTasks.length}</h3>
                 <ul className="grid gap-1">
                   {stats.doneTasks.map((t) => (
                     <li key={t.id}>
@@ -350,7 +350,7 @@ export function TodayPage({ data }: { data: PlannerData }) {
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-card-lime text-ink">
                           <Check size={13} strokeWidth={3} />
                         </span>
-                        <span className="flex-1 truncate text-sm font-semibold text-muted line-through">{t.title}</span>
+                        <span className="flex-1 truncate text-sm font-medium text-muted line-through">{t.title}</span>
                         {t.spentMin > 0 && <span className="text-xs text-muted">{formatDuration(t.spentMin)}</span>}
                       </button>
                     </li>

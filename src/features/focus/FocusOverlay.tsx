@@ -202,7 +202,7 @@ export function FocusOverlay({ task }: { task: Task }) {
 
       <div className="text-center">
         <p className="text-sm uppercase tracking-widest text-card-lime">{PHASE_LABEL[phase]}</p>
-        <h2 className="mt-2 max-w-sm text-3xl font-bold">{task.title}</h2>
+        <h2 className="mt-2 max-w-sm text-3xl font-semibold">{task.title}</h2>
       </div>
 
       <div className="relative flex h-72 w-72 items-center justify-center">
@@ -220,7 +220,7 @@ export function FocusOverlay({ task }: { task: Task }) {
             strokeDashoffset={circumference * (1 - Math.min(1, Math.max(0, progress)))}
           />
         </svg>
-        <span role="timer" aria-live="off" className="text-7xl font-bold tabular-nums tracking-tight">
+        <span role="timer" aria-live="off" className="text-7xl font-semibold tabular-nums tracking-tight">
           {mmss(remaining)}
         </span>
       </div>

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { habitStreak, isScheduledOn, weekReport, type HistoryInput } from '../../supabase/functions/_shared/analytics.ts';
 import { addDays, dayBounds, hourLabel, localParts, shortDayLabel } from '../../supabase/functions/_shared/zone.ts';
 import { Sheet } from '../components/Sheet';
-import { Bento, Kicker, Segmented, Skeleton } from '../components/ui';
+import { Button, Segmented, Skeleton } from '../components/ui';
 import { HabitCheck } from '../features/habits/HabitCheck';
 import { HabitEditor } from '../features/habits/HabitEditor';
 import { ChartCard, minutesTick, PairedBars, PairedLines, SingleBars } from '../features/report/charts';
@@ -15,8 +15,6 @@ import { db } from '../lib/db/schema';
 import { describeDays } from '../lib/habits';
 import { dayKey, formatDuration } from '../lib/time/tz';
 import type { Habit } from '../lib/types';
-
-const pill = 'inline-flex items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-ink';
 
 function headline(score: number | null): { title: string; mood: string } {
   if (score === null) return { title: 'let’s get your first week going', mood: 'Plan a few tasks and finish them to see your progress' };
@@ -126,138 +124,69 @@ export default function ProgressPage({ data }: { data: PlannerData }) {
   const look = deeper?.week === lookKey ? deeper.items : null;
 
   return (
-    <div className="grid gap-5">
-      <header className="mb-1 lg:mb-3">
-        <p className="text-sm font-semibold text-muted">{week === 'this' ? 'Last 7 days' : 'The 7 days before'}</p>
-        <h1 className="mt-1 text-[32px] font-bold leading-none tracking-tight lg:text-[40px]">Progress</h1>
+    <div className="grid gap-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-muted">{week === 'this' ? 'Last 7 days' : 'The 7 days before'}</p>
+          <h1 className="mt-1 text-[32px] font-semibold leading-none tracking-tight lg:text-[38px]">Progress</h1>
+        </div>
+        <Segmented
+          label="Week"
+          value={week}
+          onChange={setWeek}
+          options={[
+            { value: 'this', label: 'This week' },
+            { value: 'last', label: 'Last week' },
+          ]}
+        />
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Bento tone="mist" className="rise relative overflow-hidden p-6 lg:p-8">
-          <div aria-hidden className="absolute -right-14 -top-14 h-48 w-48 rounded-full border-[26px] border-ink/[0.05]" />
-          <Kicker>{week === 'this' ? 'This week' : 'Last week'}</Kicker>
-          <h2 className="relative mt-2 text-[30px] font-bold leading-[1.1] tracking-tight lg:text-[34px]">Hello 👋 {words.title}</h2>
-          <div className="mt-6 flex flex-wrap gap-2">
-            <span className={pill}>Focus {w.focusMin ? formatDuration(w.focusMin) : '0m'}</span>
-            {w.bestDay && <span className={pill}>Best: {w.bestDay.label.split(',')[0]} {w.bestDay.score}%</span>}
-            {delta !== null && (
-              <span className={pill}>
-                {delta >= 0 ? '+' : '−'}
-                {Math.abs(delta)} pts vs week before
-              </span>
-            )}
-          </div>
-        </Bento>
-
-        <Bento tone="sun" className="rise flex flex-col p-6">
-          <div className="flex items-center justify-between gap-2">
-            <Kicker>Your progress</Kicker>
-            <Segmented
-              label="Week"
-              value={week}
-              onChange={setWeek}
-              options={[
-                { value: 'this', label: 'This week' },
-                { value: 'last', label: 'Last week' },
-              ]}
-            />
-          </div>
-          <div className="mt-auto flex items-end justify-between gap-4 pt-8">
-            <p className="max-w-[60%] text-2xl font-bold leading-tight">{words.mood}</p>
-            <p className="text-6xl font-bold tracking-tight">{w.averageScore === null ? <span aria-label="no score yet">🌱</span> : `${w.averageScore}%`}</p>
-          </div>
-          <p className="mt-2 text-sm font-semibold opacity-70">
-            {w.completed} of {w.planned} planned tasks done
-          </p>
-        </Bento>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <div className="col-span-2 rounded-[24px] bg-card-lime p-5 text-ink lg:col-span-1">
+          <p className="text-sm font-medium opacity-70">Average day score</p>
+          <p className="mt-2 text-5xl font-semibold tracking-tight">{w.averageScore === null ? '—' : `${w.averageScore}%`}</p>
+          <p className="mt-2 text-sm font-medium opacity-75">{words.mood}</p>
+        </div>
+        <Tile label="Tasks done" value={`${w.completed}/${w.planned}`} note={w.planned ? `${Math.round((w.completed / w.planned) * 100)}% of the plan` : 'Nothing planned yet'} />
+        <Tile label="Focus time" value={w.focusMin ? formatDuration(w.focusMin) : '0m'} note={w.previousFocusMin ? `${formatDuration(w.previousFocusMin)} the week before` : 'Use the focus timer'} />
+        <Tile
+          label="Best day"
+          value={w.bestDay ? w.bestDay.label.split(',')[0].slice(0, 3) : '—'}
+          note={w.bestDay ? `${w.bestDay.score}% done${delta !== null ? ` · ${delta >= 0 ? '+' : '−'}${Math.abs(delta)} pts vs before` : ''}` : 'Finish a planned day'}
+        />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.25fr_1fr] lg:items-start">
-      <section id="habits" aria-label="Habits" className="rounded-[28px] bg-surface p-5 ring-1 ring-line">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Habits</h2>
-          <button type="button" onClick={() => setEditing('new')} className="inline-flex items-center gap-1.5 rounded-full bg-fg px-4 py-2 text-sm font-bold text-app">
-            <Plus size={16} /> New habit
-          </button>
-        </div>
-        {habits.length === 0 ? (
-          <div className="flex items-center gap-4 rounded-[20px] bg-surface-2 p-5">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-card-lime text-ink">
-              <Repeat size={20} />
-            </span>
-            <p className="text-sm text-muted">Small things you want to do regularly, like reading or a walk. Build a streak one day at a time.</p>
+      <section aria-label="Insight" className="rounded-[24px] border border-line p-5">
+        <div className="flex flex-wrap items-start gap-4">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card-sky text-ink">
+            <Lightbulb size={18} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-muted">Insight</p>
+            <p className="mt-0.5 text-[16px] font-medium leading-snug">{w.insight}</p>
           </div>
-        ) : (
-          <ul className="grid gap-2">
-            {habits.map((habit) => {
-              const streak = habitStreak(habit, habitLogs, today);
-              const scheduled = isScheduledOn(habit, today);
-              const weekDays = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
-              return (
-                <li key={habit.id} className="flex items-center gap-3 rounded-[22px] bg-surface-2 p-2 pr-4">
-                  {scheduled ? (
-                    <HabitCheck habitId={habit.id} title={habit.title} date={today} done={doneToday.has(habit.id)} />
-                  ) : (
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-muted" title="Rest day">
-                      rest
-                    </span>
-                  )}
-                  <button type="button" onClick={() => setEditing(habit)} className="min-w-0 flex-1 text-left">
-                    <span className="block truncate font-bold">{habit.title}</span>
-                    <span className="block text-xs font-semibold text-muted">{describeDays(habit.days)}</span>
-                  </button>
-                  <div className="hidden gap-1 sm:flex" aria-label="Last 7 days">
-                    {weekDays.map((date) => {
-                      const done = habitLogs.some((l) => l.habitId === habit.id && l.date === date);
-                      const due = isScheduledOn(habit, date);
-                      return <span key={date} title={date} className={`h-2.5 w-2.5 rounded-full ${done ? 'bg-card-lime' : due ? 'bg-fg/20' : 'bg-transparent ring-1 ring-fg/15'}`} />;
-                    })}
-                  </div>
-                  <span className="inline-flex w-12 items-center justify-end gap-0.5 font-bold text-orange-600 dark:text-orange-300" title={`Best streak: ${streak.best}`}>
-                    <Flame size={16} aria-hidden /> {streak.current}
-                    <span className="sr-only"> day streak, best {streak.best}</span>
-                  </span>
-                </li>
-              );
-            })}
+          {ai && !look && (
+            <button
+              type="button"
+              onClick={() => void askDeeper()}
+              disabled={deeperLoading}
+              className="inline-flex items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm font-medium hover:bg-surface-2 disabled:opacity-70"
+            >
+              {deeperLoading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />} {deeperLoading ? 'Looking…' : 'Deeper look'}
+            </button>
+          )}
+        </div>
+        {deeperError && <p className="mt-3 text-sm text-muted">{deeperError}</p>}
+        {look && (
+          <ul className="mt-4 grid gap-2 border-t border-line pt-4 sm:grid-cols-3">
+            {look.map((item, i) => (
+              <li key={i} className="flex gap-2.5 rounded-2xl bg-surface-2 p-3.5 text-sm leading-relaxed">
+                <Sparkles size={15} className="mt-0.5 shrink-0 text-muted" /> {item}
+              </li>
+            ))}
           </ul>
         )}
       </section>
-
-      <Bento tone="sky" className="grid gap-4">
-        <div className="flex gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-white">
-            <Lightbulb size={18} />
-          </span>
-          <div>
-            <Kicker>Insight</Kicker>
-            <p className="mt-0.5 text-[17px] font-semibold leading-snug">{w.insight}</p>
-          </div>
-        </div>
-        {ai &&
-          (look ? (
-            <ul className="grid gap-2">
-              {look.map((item, i) => (
-                <li key={i} className="flex gap-3 rounded-2xl bg-white/60 p-3 text-sm font-semibold">
-                  <Sparkles size={15} className="mt-0.5 shrink-0" /> {item}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div>
-              <button
-                type="button"
-                onClick={() => void askDeeper()}
-                disabled={deeperLoading}
-                className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-bold text-white disabled:opacity-70"
-              >
-                {deeperLoading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />} {deeperLoading ? 'Looking…' : 'Deeper look with Gemini'}
-              </button>
-              {deeperError && <p className="mt-2 text-sm font-semibold opacity-75">{deeperError}</p>}
-            </div>
-          ))}
-      </Bento>
-      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard
@@ -288,11 +217,69 @@ export default function ProgressPage({ data }: { data: PlannerData }) {
         </ChartCard>
       </div>
 
+      <section id="habits" aria-label="Habits" className="rounded-[24px] border border-line p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Habits</h2>
+            <p className="text-sm text-muted">{habits.length ? 'Tap the circle to check off today' : 'Small things you want to do regularly'}</p>
+          </div>
+          <Button size="sm" variant="primary" onClick={() => setEditing('new')}>
+            <Plus size={15} /> New habit
+          </Button>
+        </div>
+        {habits.length === 0 ? (
+          <button
+            type="button"
+            onClick={() => setEditing('new')}
+            className="flex w-full items-center gap-4 rounded-[18px] border border-dashed border-line p-5 text-left hover:bg-surface-2"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-card-lime text-ink">
+              <Repeat size={19} />
+            </span>
+            <span className="text-sm text-muted">Reading, a walk, journaling… build a streak one day at a time.</span>
+          </button>
+        ) : (
+          <ul className="grid gap-1">
+            {habits.map((habit) => {
+              const streak = habitStreak(habit, habitLogs, today);
+              const scheduled = isScheduledOn(habit, today);
+              const weekDays = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
+              return (
+                <li key={habit.id} className="flex items-center gap-3 rounded-[18px] px-2 py-2 hover:bg-surface-2">
+                  {scheduled ? (
+                    <HabitCheck habitId={habit.id} title={habit.title} date={today} done={doneToday.has(habit.id)} size={36} />
+                  ) : (
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-medium text-muted" title="Rest day">
+                      rest
+                    </span>
+                  )}
+                  <button type="button" onClick={() => setEditing(habit)} className="min-w-0 flex-1 text-left">
+                    <span className="block truncate font-medium">{habit.title}</span>
+                    <span className="block text-xs text-muted">{describeDays(habit.days)}</span>
+                  </button>
+                  <div className="hidden gap-1 sm:flex" aria-label="Last 7 days">
+                    {weekDays.map((date) => {
+                      const done = habitLogs.some((l) => l.habitId === habit.id && l.date === date);
+                      const due = isScheduledOn(habit, date);
+                      return <span key={date} title={date} className={`h-2 w-2 rounded-full ${done ? 'bg-card-lime' : due ? 'bg-fg/15' : 'bg-transparent ring-1 ring-fg/15'}`} />;
+                    })}
+                  </div>
+                  <span className="inline-flex w-12 items-center justify-end gap-0.5 text-sm font-semibold text-orange-600 dark:text-orange-300" title={`Best streak: ${streak.best}`}>
+                    <Flame size={15} aria-hidden /> {streak.current}
+                    <span className="sr-only"> day streak, best {streak.best}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
       <button
         type="button"
         aria-expanded={more}
         onClick={() => setMore(!more)}
-        className="mx-auto inline-flex items-center gap-1.5 rounded-full bg-surface px-5 py-2.5 text-sm font-bold"
+        className="mx-auto inline-flex items-center gap-1.5 rounded-full border border-line px-5 py-2 text-sm font-medium hover:bg-surface-2"
       >
         {more ? 'Fewer charts' : 'More charts'} <ChevronDown size={16} className={`transition ${more ? 'rotate-180' : ''}`} />
       </button>
@@ -345,6 +332,16 @@ export default function ProgressPage({ data }: { data: PlannerData }) {
       <Sheet open={editing !== null} onClose={() => setEditing(null)} title={editing === 'new' ? 'New habit' : 'Edit habit'}>
         {editing !== null && <HabitEditor habit={editing} onClose={() => setEditing(null)} />}
       </Sheet>
+    </div>
+  );
+}
+
+function Tile({ label, value, note }: { label: string; value: string; note: string }) {
+  return (
+    <div className="min-w-0 rounded-[24px] border border-line p-5">
+      <p className="truncate text-sm font-medium text-muted">{label}</p>
+      <p className="mt-2 truncate text-3xl font-semibold tracking-tight">{value}</p>
+      <p className="mt-2 truncate text-xs text-muted">{note}</p>
     </div>
   );
 }

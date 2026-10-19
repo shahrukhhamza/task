@@ -47,9 +47,9 @@ export function DayList({ items, tz, now }: { items: DayItem[]; tz: string; now:
               >
                 <span className="flex items-center gap-2">
                   {item.kind === 'event' && <CalendarDays size={14} className="shrink-0 opacity-60" aria-hidden />}
-                  <span className="truncate text-[15px] font-bold">{item.title}</span>
-                  {current && <span className="shrink-0 rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">Now</span>}
-                  {missed && <span className="shrink-0 rounded-full bg-card-coral px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink">Missed</span>}
+                  <span className="truncate text-[15px] font-semibold">{item.title}</span>
+                  {current && <span className="shrink-0 rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Now</span>}
+                  {missed && <span className="shrink-0 rounded-full bg-card-coral px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink">Missed</span>}
                 </span>
                 <span className={`mt-0.5 block truncate text-[13px] font-medium ${current ? 'opacity-70' : 'text-muted'}`}>{meta.join(' · ')}</span>
               </button>

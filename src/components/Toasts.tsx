@@ -15,7 +15,7 @@ export function Toasts() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`rise pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-full py-2.5 pl-5 pr-2 text-sm font-semibold shadow-xl ${
+          className={`rise pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-full py-2.5 pl-5 pr-2 text-sm font-medium shadow-xl ${
             t.tone === 'error' ? 'bg-card-coral text-ink' : 'bg-ink text-white ring-1 ring-white/10'
           }`}
         >

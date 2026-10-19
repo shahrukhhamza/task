@@ -33,7 +33,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   const id = useId();
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-semibold">
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium">
         {label}
       </label>
       {children(id)}
@@ -63,7 +63,7 @@ function TimeField({ label, value, onChange, hint }: { label: string; value: num
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <Card className="grid gap-5">
-    <h2 className="text-xl font-bold">{title}</h2>
+    <h2 className="text-xl font-semibold">{title}</h2>
     {children}
   </Card>
 );
@@ -152,7 +152,7 @@ export function SettingsPage({ data }: { data: PlannerData }) {
               <TimeField label="Best focus from" value={profile.peakStart} onChange={(v) => void save({ peakStart: v })} hint="Hard tasks go here." />
               <TimeField label="Best focus until" value={profile.peakEnd} onChange={(v) => void save({ peakEnd: v })} />
             </div>
-            <button type="button" aria-expanded={advanced} onClick={() => setAdvanced(!advanced)} className="inline-flex items-center gap-1 justify-self-start text-sm font-semibold text-muted hover:text-fg">
+            <button type="button" aria-expanded={advanced} onClick={() => setAdvanced(!advanced)} className="inline-flex items-center gap-1 justify-self-start text-sm font-medium text-muted hover:text-fg">
               Advanced <ChevronDown size={16} className={`transition ${advanced ? 'rotate-180' : ''}`} />
             </button>
             {advanced && (
@@ -182,11 +182,11 @@ export function SettingsPage({ data }: { data: PlannerData }) {
             )}
             {learned.length > 0 && (
               <div>
-                <p className="mb-2 text-sm font-semibold">What Dayflow has learned</p>
+                <p className="mb-2 text-sm font-medium">What Dayflow has learned</p>
                 <ul className="grid gap-2 text-sm">
                   {learned.map(([category, s]) => (
                     <li key={category} className="flex justify-between gap-3 rounded-[16px] bg-surface-2 px-4 py-3">
-                      <span className="font-semibold capitalize">{category}</span>
+                      <span className="font-medium capitalize">{category}</span>
                       <span className="text-muted">{s.ratio >= 1 ? `takes ${Math.round((s.ratio - 1) * 100)}% longer` : `${Math.round((1 - s.ratio) * 100)}% quicker`} than estimated</span>
                     </li>
                   ))}
@@ -199,7 +199,7 @@ export function SettingsPage({ data }: { data: PlannerData }) {
         return (
           <Section title="Look & voice">
             <div>
-              <p className="mb-2 text-sm font-semibold">Theme</p>
+              <p className="mb-2 text-sm font-medium">Theme</p>
               <Segmented
                 label="Theme"
                 value={profile.theme}
@@ -287,8 +287,8 @@ export function SettingsPage({ data }: { data: PlannerData }) {
                 <Icon size={18} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block font-bold">{s.title}</span>
-                <span className="block truncate text-xs font-semibold text-muted">{s.desc}</span>
+                <span className="block font-semibold">{s.title}</span>
+                <span className="block truncate text-xs font-medium text-muted">{s.desc}</span>
               </span>
               <ChevronRight size={18} className="text-muted lg:hidden" />
             </button>
@@ -301,12 +301,12 @@ export function SettingsPage({ data }: { data: PlannerData }) {
   return (
     <div>
       <header className="mb-6 lg:mb-8">
-        <p className="text-sm font-semibold text-muted">Make Dayflow yours</p>
-        <h1 className="mt-1 text-[32px] font-bold leading-none tracking-tight lg:text-[40px]">Settings</h1>
+        <p className="text-sm font-medium text-muted">Make Dayflow yours</p>
+        <h1 className="mt-1 text-[32px] font-semibold leading-none tracking-tight lg:text-[40px]">Settings</h1>
       </header>
 
       {error && (
-        <p role="alert" className="mb-4 rounded-[20px] bg-card-coral p-4 text-sm font-semibold text-ink">
+        <p role="alert" className="mb-4 rounded-[20px] bg-card-coral p-4 text-sm font-medium text-ink">
           {error}
         </p>
       )}
@@ -315,7 +315,7 @@ export function SettingsPage({ data }: { data: PlannerData }) {
         /* phones: a menu, then one section at a time */
         mobileOpen ? (
           <div className="grid gap-4">
-            <button type="button" onClick={() => { setMobileOpen(null); setParams({}, { replace: true }); }} className="inline-flex items-center gap-1 justify-self-start rounded-full bg-surface px-4 py-2 text-sm font-bold">
+            <button type="button" onClick={() => { setMobileOpen(null); setParams({}, { replace: true }); }} className="inline-flex items-center gap-1 justify-self-start rounded-full bg-surface px-4 py-2 text-sm font-semibold">
               <ChevronLeft size={16} /> All settings
             </button>
             {content(mobileOpen)}

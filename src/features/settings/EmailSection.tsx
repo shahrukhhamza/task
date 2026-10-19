@@ -38,7 +38,7 @@ export function EmailSection({ profile }: { profile: Profile }) {
   if (!user) {
     return (
       <Card className="grid gap-2">
-        <h2 className="flex items-center gap-2 font-semibold">
+        <h2 className="flex items-center gap-2 font-medium">
           <Mail size={18} /> Nightly summary email
         </h2>
         <p className="text-sm text-muted">
@@ -70,7 +70,7 @@ export function EmailSection({ profile }: { profile: Profile }) {
   return (
     <Card className="grid gap-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 font-semibold">
+        <h2 className="flex items-center gap-2 font-medium">
           <Mail size={18} /> Nightly summary email
         </h2>
         <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium">

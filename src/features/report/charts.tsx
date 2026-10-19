@@ -32,10 +32,10 @@ export function ChartCard<T>({ title, subtitle, rows, columns, children, empty }
 }) {
   const [table, setTable] = useState(false);
   return (
-    <section className="grid gap-3 rounded-[28px] bg-surface p-5">
+    <section className="grid gap-3 rounded-[24px] border border-line bg-surface p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold">{title}</h2>
+          <h2 className="text-lg font-semibold">{title}</h2>
           {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
         </div>
         {rows.length > 0 && (
@@ -43,7 +43,7 @@ export function ChartCard<T>({ title, subtitle, rows, columns, children, empty }
             type="button"
             aria-pressed={table}
             onClick={() => setTable(!table)}
-            className="shrink-0 rounded-full bg-surface-2 px-3 py-1.5 text-xs font-bold hover:brightness-95"
+            className="shrink-0 rounded-full bg-surface-2 px-3 py-1.5 text-xs font-semibold hover:brightness-95"
           >
             {table ? 'Show chart' : 'Show as table'}
           </button>
@@ -87,11 +87,11 @@ function TooltipBox({ active, payload, label, format }: Partial<TooltipContentPr
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-2xl bg-surface px-3 py-2 text-xs shadow-lg ring-1 ring-line">
-      <p className="mb-1 font-bold text-fg">{label}</p>
+      <p className="mb-1 font-semibold text-fg">{label}</p>
       {payload.map((p) => (
         <p key={String(p.dataKey)} className="flex items-center gap-1.5 text-muted">
           <span className="h-2 w-2 rounded-sm" style={{ background: p.color }} aria-hidden />
-          {p.name}: <span className="font-bold text-fg">{format(Number(p.value), String(p.name))}</span>
+          {p.name}: <span className="font-semibold text-fg">{format(Number(p.value), String(p.name))}</span>
         </p>
       ))}
     </div>

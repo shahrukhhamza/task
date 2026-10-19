@@ -26,7 +26,7 @@ function describeCommand(c: ParsedCommand, tz: string, now: number): string {
   }
 }
 
-const tag = 'inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-xs font-semibold text-ink';
+const tag = 'inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-1 text-xs font-medium text-fg';
 
 /** The chips that describe a parsed task: when, how long, priority, repeat, calendar. */
 export function TaskSummary({ task, timezone, now }: { task: ParsedTask; timezone: string; now: number }) {
@@ -67,14 +67,14 @@ export function LivePreview({ result, timezone, now }: { result: ParseResult; ti
   return (
     <div aria-live="polite" className="grid max-h-56 gap-2 overflow-y-auto">
       {result.kind === 'command' ? (
-        <div className="flex items-center gap-3 rounded-2xl bg-card-lilac p-3 text-ink">
+        <div className="flex items-center gap-3 rounded-2xl border border-line p-3">
           <Wand2 size={18} className="shrink-0" />
-          <span className="text-sm font-semibold">{describeCommand(result.command, timezone, now)}</span>
+          <span className="text-sm font-medium">{describeCommand(result.command, timezone, now)}</span>
         </div>
       ) : (
         result.tasks.map((t, i) => (
-          <div key={i} className="rounded-2xl bg-card-cream p-3 text-ink">
-            <p className="mb-1.5 font-bold">{t.title}</p>
+          <div key={i} className="rounded-2xl border border-line p-3">
+            <p className="mb-2 font-medium">{t.title}</p>
             <TaskSummary task={t} timezone={timezone} now={now} />
           </div>
         ))

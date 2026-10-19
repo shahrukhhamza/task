@@ -1,4 +1,4 @@
-import { ArrowLeft, Loader2, Mic, MicOff, Pencil, Sparkles, Square, Trash2 } from 'lucide-react';
+import { ArrowLeft, CornerDownRight, Loader2, Mic, MicOff, Pencil, Sparkles, Square, Trash2 } from 'lucide-react';
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Sheet } from '../../components/Sheet';
 import { Button } from '../../components/ui';
@@ -140,7 +140,7 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
   const valid = drafts.filter((t) => t.title.trim()).length;
 
   return (
-    <Sheet open={open} onClose={close} title={step === 'review' ? 'Check before adding' : 'Add to your day'} wide={step === 'review'}>
+    <Sheet open={open} onClose={close} title={step === 'review' ? 'Review tasks' : 'New task'} wide={step === 'review'}>
       {step === 'write' ? (
         <div className="grid gap-4">
           <form
@@ -148,7 +148,7 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
               e.preventDefault();
               void submit();
             }}
-            className="rounded-[24px] bg-surface-2 p-4 ring-fg/20 transition focus-within:ring-2"
+            className="rounded-[20px] border border-line bg-surface p-4 transition focus-within:border-fg/25 focus-within:shadow-[0_0_0_4px_var(--app-surface-2)]"
           >
             <label htmlFor="smart-input" className="sr-only">
               Add tasks or give a command
@@ -166,10 +166,10 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
                   void submit();
                 }
               }}
-              placeholder={speech.listening ? 'Listening… say your tasks' : 'What’s on your mind?'}
-              className="w-full resize-none bg-transparent text-xl font-semibold leading-snug text-fg placeholder:text-muted focus:outline-none focus-visible:outline-none"
+              placeholder={speech.listening ? 'Listening… say your tasks' : 'What do you need to do?'}
+              className="w-full resize-none bg-transparent text-lg leading-relaxed text-fg outline-none placeholder:text-muted focus:outline-none focus-visible:outline-none"
             />
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
               <button
                 type="button"
                 onClick={speech.listening ? speech.stop : speech.start}
@@ -177,27 +177,30 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
                 aria-pressed={speech.listening}
                 aria-label={speech.listening ? 'Stop listening' : 'Speak your tasks'}
                 title={speech.supported ? 'Speak your tasks' : 'Voice isn’t supported in this browser. Chrome or Edge work best.'}
-                className={`flex h-12 w-12 items-center justify-center rounded-full transition disabled:opacity-40 ${
-                  speech.listening ? 'mic-live bg-red-600 text-white' : 'bg-ink text-white hover:bg-black'
+                className={`flex h-10 w-10 items-center justify-center rounded-full transition disabled:opacity-40 ${
+                  speech.listening ? 'mic-live bg-red-600 text-white' : 'bg-surface-2 text-fg hover:brightness-95'
                 }`}
               >
-                {!speech.supported ? <MicOff size={20} /> : speech.listening ? <Square size={16} fill="currentColor" /> : <Mic size={20} />}
+                {!speech.supported ? <MicOff size={18} /> : speech.listening ? <Square size={14} fill="currentColor" /> : <Mic size={18} />}
               </button>
-              <span className="text-sm text-muted">{speech.listening ? 'Listening… tap to stop' : speech.supported ? 'Tap to speak' : 'Typing only in this browser'}</span>
-              <Button type="submit" variant="primary" className="ml-auto min-w-24" disabled={!composed.trim() || busy}>
+              <span className="text-sm text-muted">{speech.listening ? 'Listening… tap to stop' : speech.supported ? 'Speak' : 'Typing only here'}</span>
+              <span className="ml-auto hidden items-center gap-1 text-xs text-muted sm:inline-flex">
+                <kbd className="rounded-md border border-line px-1.5 py-0.5 font-sans">↵</kbd> to add
+              </span>
+              <Button type="submit" variant="primary" size="sm" className="ml-auto min-w-24 sm:ml-2" disabled={!composed.trim() || busy}>
                 {busy ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" /> {ai ? 'Thinking' : 'Adding'}
+                    <Loader2 size={15} className="animate-spin" /> {ai ? 'Thinking' : 'Adding'}
                   </>
                 ) : (
-                  'Add'
+                  'Add task'
                 )}
               </Button>
             </div>
           </form>
 
           {speech.error && (
-            <p role="alert" className="rounded-2xl bg-card-coral p-3 text-sm font-semibold text-ink">
+            <p role="alert" className="rounded-2xl bg-card-coral p-3 text-sm font-medium text-ink">
               {speech.error}
             </p>
           )}
@@ -205,16 +208,16 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
           {pending?.kind === 'reply' && (
             <div role="status" className="flex gap-3 rounded-2xl bg-card-lilac p-4 text-ink">
               <Sparkles size={18} className="mt-0.5 shrink-0" />
-              <p className="font-semibold">{pending.text}</p>
+              <p className="font-medium">{pending.text}</p>
             </div>
           )}
 
           {pending?.kind === 'clarify' && (
             <div role="alert" className="grid gap-2 rounded-2xl bg-card-sun p-4 text-ink">
-              <p className="font-bold">{pending.question}</p>
+              <p className="font-semibold">{pending.question}</p>
               <div className="flex flex-wrap gap-2">
                 {pending.options.map((o) => (
-                  <button key={o.label} type="button" className="rounded-full bg-white px-4 py-2 text-sm font-semibold" onClick={async () => handleOutcome(await o.run(), text)}>
+                  <button key={o.label} type="button" className="rounded-full bg-white px-4 py-2 text-sm font-medium" onClick={async () => handleOutcome(await o.run(), text)}>
                     {o.label}
                   </button>
                 ))}
@@ -223,10 +226,10 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
           )}
           {pending?.kind === 'notFound' && (
             <div role="alert" className="flex flex-wrap items-center gap-3 rounded-2xl bg-card-sun p-4 text-ink">
-              <p className="flex-1 font-semibold">{pending.message}</p>
+              <p className="flex-1 font-medium">{pending.message}</p>
               <button
                 type="button"
-                className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white"
+                className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white"
                 onClick={() => {
                   const result = parseTasksOnly(pending.raw, { now: Date.now(), timezone: profile.timezone });
                   setPending(null);
@@ -244,8 +247,8 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
 
           {habitPreview ? (
             <div aria-live="polite" className="rounded-2xl bg-card-lime p-3 text-ink">
-              <p className="font-bold">New habit: {habitPreview.title}</p>
-              <p className="text-sm font-semibold opacity-70">{describeDays(habitPreview.days)}</p>
+              <p className="font-semibold">New habit: {habitPreview.title}</p>
+              <p className="text-sm font-medium opacity-70">{describeDays(habitPreview.days)}</p>
             </div>
           ) : (
             <LivePreview result={preview} timezone={profile.timezone} now={now} />
@@ -253,29 +256,30 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
 
           {!composed.trim() && (
             <div>
-              <p className="mb-2 text-sm font-semibold text-muted">Try</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="mb-1 px-1 text-xs font-medium uppercase tracking-wider text-muted">Examples</p>
+              <ul>
                 {EXAMPLES.map((example) => (
-                  <button
-                    key={example}
-                    type="button"
-                    onClick={() => {
-                      setText(example);
-                      textarea.current?.focus();
-                    }}
-                    className="rounded-full bg-surface-2 px-4 py-2 text-sm font-semibold hover:brightness-95"
-                  >
-                    {example}
-                  </button>
+                  <li key={example}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setText(example);
+                        textarea.current?.focus();
+                      }}
+                      className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-[15px] text-fg hover:bg-surface-2"
+                    >
+                      <CornerDownRight size={15} className="shrink-0 text-muted" aria-hidden /> {example}
+                    </button>
+                  </li>
                 ))}
-              </div>
-              <p className="mt-3 flex items-center gap-1.5 text-xs text-muted">
+              </ul>
+              <p className="mt-3 flex items-center gap-1.5 px-1 text-xs text-muted">
                 {ai ? (
                   <>
-                    <Sparkles size={13} /> Gemini is on: write or speak naturally, in any language.
+                    <Sparkles size={13} /> Gemini is on. Write or speak naturally, in any language.
                   </>
                 ) : (
-                  'Add several things at once with commas. Start with “habit:” to build a habit.'
+                  'Add several things at once with commas. Start with “habit:” to track a habit.'
                 )}
               </p>
             </div>
@@ -284,13 +288,13 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
       ) : (
         <div className="grid gap-3">
           {byAi && (
-            <p className="flex items-center gap-2 text-sm font-semibold text-muted">
+            <p className="flex items-center gap-2 text-sm font-medium text-muted">
               <Sparkles size={15} /> Understood by Gemini. Check the details, then add.
             </p>
           )}
           {drafts.map((task, i) =>
             editing === i ? (
-              <div key={i} className="rounded-[24px] bg-surface-2 p-4 ring-fg/20 transition focus-within:ring-2">
+              <div key={i} className="rounded-[20px] border border-line bg-surface p-4">
                 <TaskForm value={task} timezone={profile.timezone} onChange={(next) => setDrafts(drafts.map((t, j) => (j === i ? next : t)))} />
                 {drafts.length > 1 && (
                   <div className="mt-4 flex justify-end">
@@ -301,19 +305,19 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
                 )}
               </div>
             ) : (
-              <div key={i} className="flex items-start gap-3 rounded-[24px] bg-card-cream p-4 text-ink">
+              <div key={i} className="flex items-start gap-3 rounded-[20px] border border-line bg-surface p-4">
                 <div className="min-w-0 flex-1">
-                  <p className="mb-1.5 truncate text-lg font-bold">{task.title || 'Untitled'}</p>
+                  <p className="mb-2 truncate text-base font-semibold">{task.title || 'Untitled'}</p>
                   <TaskSummary task={task} timezone={profile.timezone} now={now} />
                 </div>
-                <button type="button" aria-label={`Edit ${task.title}`} onClick={() => setEditing(i)} className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white">
+                <button type="button" aria-label={`Edit ${task.title}`} onClick={() => setEditing(i)} className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-fg hover:brightness-95">
                   <Pencil size={16} />
                 </button>
                 <button
                   type="button"
                   aria-label={`Remove ${task.title}`}
                   onClick={() => setDrafts(drafts.filter((_, j) => j !== i))}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-fg hover:brightness-95"
                 >
                   <Trash2 size={16} />
                 </button>

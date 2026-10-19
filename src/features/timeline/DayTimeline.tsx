@@ -90,7 +90,7 @@ export function DayTimeline({ day, tasks, fixedItems, profile, now }: DayTimelin
       {/* hour grid */}
       {hours.map((m) => (
         <div key={m} className="absolute inset-x-0 border-t border-line" style={{ top: y(m) }}>
-          <span className="absolute -left-12 -top-2.5 w-10 text-right text-[11px] font-semibold text-muted">
+          <span className="absolute -left-12 -top-2.5 w-10 text-right text-[11px] font-medium text-muted">
             {m < 24 * 60 ? label(m / 60) : ''}
           </span>
         </div>
@@ -103,7 +103,7 @@ export function DayTimeline({ day, tasks, fixedItems, profile, now }: DayTimelin
           className="absolute inset-x-0 rounded-xl bg-card-lime/20"
           style={{ top: y(Math.max(profile.peakStart, startMin)), height: (Math.min(profile.peakEnd, endMin) - Math.max(profile.peakStart, startMin)) * PX_PER_MIN }}
         >
-          <span className="absolute right-2 top-1 text-[10px] font-bold uppercase tracking-wide text-muted">
+          <span className="absolute right-2 top-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
             Peak focus
           </span>
         </div>
@@ -217,7 +217,7 @@ function TimelineItem({ item, style, tz, now }: { item: Item; style: React.CSSPr
         )}
         {done && <CheckCircle2 size={14} className="mt-0.5 shrink-0" />}
         <div className="min-w-0 flex-1">
-          <div className={`truncate font-semibold ${done ? 'line-through' : ''}`}>
+          <div className={`truncate font-medium ${done ? 'line-through' : ''}`}>
             {item.title}
             {block && block.chunks > 1 && <span className="ml-1 font-normal opacity-70">{block.chunk}/{block.chunks}</span>}
           </div>
