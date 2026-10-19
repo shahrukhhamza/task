@@ -75,7 +75,7 @@ export function Bento({ tone = 'surface', className = '', children, ...rest }: C
 
 /** Neutral card (kept for older screens). */
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-[24px] bg-surface p-5 text-fg ${className}`}>{children}</div>;
+  return <div className={`rounded-[28px] bg-surface p-5 text-fg ring-1 ring-line lg:p-6 ${className}`}>{children}</div>;
 }
 
 /** Small uppercase-free label above a big headline, as in "Current tasks". */

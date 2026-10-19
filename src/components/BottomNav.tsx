@@ -37,7 +37,7 @@ function Item({ to, label, icon: Icon }: (typeof LEFT)[number]) {
 export function BottomNav() {
   const openAdd = useUi((s) => s.openAdd);
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:hidden">
       <div className="flex items-center gap-1 rounded-full bg-nav p-2 shadow-2xl ring-1 ring-white/10">
         {LEFT.map((item) => (
           <Item key={item.to} {...item} />

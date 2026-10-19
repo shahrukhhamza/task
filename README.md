@@ -4,8 +4,9 @@ A voice + text daily planner and companion. Type or say what you need to do; Day
 it into tasks, time-blocks your day around your energy, re-plans when you fall behind,
 syncs with Google Calendar, and emails you a summary every night.
 
-- **Free to run.** No paid APIs, no LLM calls, no credit card anywhere. Understanding text
-  is deterministic (chrono-node + rules).
+- **Free to run.** No paid APIs and no credit card anywhere. Text is understood by a built-in
+  parser (chrono-node + rules) that works offline; an optional **smart assistant** powered by
+  Google Gemini's free tier makes it understand anything, in any language.
 - **Local-first.** Everything works offline in the browser. Cloud features (sync, Google
   Calendar, email, background reminders) switch on when you add free Supabase keys.
 - **Installable PWA** for phone and desktop.
@@ -55,6 +56,14 @@ cards → planner.
 - Weekly "where did my time go" report with charts (each with a table view).
 - Reminders before each block: in-app, and via Web Push when the app is closed.
 
+**Smart assistant (optional, Gemini free tier)**
+- Understands free-form input in any language (English, Urdu, Roman Urdu, Hindi…), including
+  voice typos, and returns structured tasks, commands or habits for you to confirm.
+- "Break it down" turns a big task into 2–6 timed steps.
+- A two-sentence daily brief on Today, and a deeper weekly look on Progress.
+- Every AI feature falls back silently to the built-in logic when it's off, offline, or out of
+  quota. Turn it on in Settings → Smart assistant with a free key (docs/SETUP.md step 0).
+
 **Cloud (optional)**
 - Google sign-in; two-way sync to Supabase with row level security on every table.
 - Google Calendar: your events block time in the plan; tasks can be added to the calendar
@@ -90,11 +99,13 @@ Web Push) is plain TypeScript, used by both the Edge Functions and the app's rep
 ## Environment variables
 
 App (`.env.local`, see `.env.example`): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
-`VITE_VAPID_PUBLIC_KEY`. All optional.
+`VITE_VAPID_PUBLIC_KEY`. All optional. The Gemini key is **not** an env var: it is entered in
+Settings and stays on the device (a key built into a public website could be copied by anyone).
 
 Edge Functions (`supabase/functions/.env`, see its `.env.example`): `GOOGLE_CLIENT_ID`,
 `GOOGLE_CLIENT_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`, `APP_URL`, `CRON_SECRET`,
-`UNSUBSCRIBE_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
+`UNSUBSCRIBE_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, and optionally
+`GEMINI_API_KEY` / `GEMINI_MODEL` for the `ai` function.
 
 No secret is ever committed; both env files are git-ignored.
 
@@ -131,7 +142,12 @@ the first live run (docs/SETUP.md step 8) to be the real integration test.
 - **Voice works best in Chrome and Edge.** The Web Speech API is missing in Firefox and
   limited on some mobile browsers, and Chrome sends audio to Google's speech service, so voice
   needs a connection. Typing always works.
-- **Parsing is English-only.** Other voice languages are transcribed but not understood.
+- **Without the smart assistant, parsing is English-only.** Other voice languages are
+  transcribed but only understood once Gemini is on.
+- **Gemini free tier**: limits are set (and changed) by Google, and on the free tier Google may
+  use prompts to improve its products. Dayflow sends only what's needed: your message, today's
+  plan for the brief, or a weekly summary. Model names change often, so Dayflow picks the best
+  available Flash model for your key automatically.
 - **The parser is rule-based**, so unusual phrasing can be misread. That's why every task is
   shown as an editable card first. Commas split lists, so "meet Ali, Sara and Omar" becomes
   several items.

@@ -11,6 +11,8 @@ import { useUi } from '../../store/ui';
 import { describeRecurrence, describeWhen } from '../input/describe';
 import { TaskForm } from '../input/TaskForm';
 import { CalendarActions } from './CalendarActions';
+import { BreakDown } from '../ai/BreakDown';
+import { useAiAvailable } from '../../lib/ai/assistant';
 
 const toDraft = (t: Task): ParsedTask => ({
   raw: t.title,
@@ -41,6 +43,7 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
   const startFocus = useUi((s) => s.startFocus);
   const toast = useUi((s) => s.toast);
   const [editing, setEditing] = useState<ParsedTask | null>(null);
+  const ai = useAiAvailable();
 
   const task = tasks.find((t) => t.id === selectedId);
   const tz = profile.timezone;
@@ -169,6 +172,10 @@ export function TaskSheet({ tasks, profile, now, risks }: TaskSheetProps) {
               <Trash2 size={15} /> Delete
             </Button>
           </div>
+
+          {ai && task.status !== 'done' && task.fixedStart === undefined && task.estimateMin >= 30 && (
+            <BreakDown key={task.id} task={task} onDone={close} />
+          )}
 
           <CalendarActions task={task} timezone={tz} />
         </div>

@@ -13,3 +13,7 @@ verify_jwt = false
 # Called only by pg_cron, authenticated with x-cron-secret.
 [functions.send-reminders]
 verify_jwt = false
+
+# Gemini proxy; called by the browser with the user's session token.
+[functions.ai]
+verify_jwt = true

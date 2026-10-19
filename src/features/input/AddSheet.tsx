@@ -1,10 +1,13 @@
-import { ArrowLeft, Mic, MicOff, Pencil, Square, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Mic, MicOff, Pencil, Sparkles, Square, Trash2 } from 'lucide-react';
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Sheet } from '../../components/Sheet';
 import { Button } from '../../components/ui';
+import { AI_ERROR_TEXT, AiError } from '../../../supabase/functions/_shared/gemini.ts';
+import { understand, useAiAvailable } from '../../lib/ai/assistant';
 import { runCommand, type CommandOutcome } from '../../lib/commandRunner';
 import { addParsedTasks } from '../../lib/db/actions';
 import { addHabit } from '../../lib/db/habitActions';
+import { db } from '../../lib/db/schema';
 import { describeDays, parseHabit } from '../../lib/habits';
 import { parseInput, parseTasksOnly, type ParsedTask } from '../../lib/parser';
 import { useSpeechRecognition } from '../../lib/speech/useSpeechRecognition';
@@ -17,7 +20,8 @@ const EXAMPLES = ['Gym at 6pm, call mom', 'Physics assignment due Thursday, 2 ho
 
 type Pending =
   | { kind: 'clarify'; question: string; options: Extract<CommandOutcome, { kind: 'clarify' }>['options'] }
-  | { kind: 'notFound'; message: string; raw: string };
+  | { kind: 'notFound'; message: string; raw: string }
+  | { kind: 'reply'; text: string };
 
 /**
  * The one place to add anything. Typed and spoken input share a pipeline:
@@ -35,6 +39,8 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
   const [editing, setEditing] = useState<number | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
   const [busy, setBusy] = useState(false);
+  const [byAi, setByAi] = useState(false);
+  const ai = useAiAvailable();
   const textarea = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -44,6 +50,7 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
     setDrafts([]);
     setPending(null);
     setEditing(null);
+    setByAi(false);
     setTimeout(() => textarea.current?.focus(), 50);
   }, [open, initial]);
 
@@ -74,6 +81,7 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
     const value = composed.trim();
     if (!value || busy) return;
 
+    const ctx = { now: Date.now(), timezone: profile.timezone };
     const habit = parseHabit(value);
     if (habit) {
       const { undo } = await addHabit(habit);
@@ -81,20 +89,39 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
       return;
     }
 
-    const result = parseInput(value, { now: Date.now(), timezone: profile.timezone });
-    if (result.kind === 'tasks') {
-      setDrafts(result.tasks);
-      setEditing(result.tasks.length === 1 ? 0 : null);
-      setStep('review');
-    } else if (result.kind === 'command') {
-      setBusy(true);
-      try {
-        handleOutcome(await runCommand(result.command), value);
-      } finally {
-        setBusy(false);
+    setBusy(true);
+    setPending(null);
+    try {
+      // Gemini first when it's on; the built-in parser is the instant, offline fallback
+      let result: Awaited<ReturnType<typeof understand>> = parseInput(value, ctx);
+      let fromAi = false;
+      if (ai) {
+        try {
+          result = await understand(value, ctx, await db.tasks.toArray());
+          fromAi = true;
+        } catch (err) {
+          const reason = err instanceof AiError ? AI_ERROR_TEXT[err.code] : 'Gemini didn’t answer.';
+          toast(`${reason} Used the quick parser instead.`);
+        }
       }
-    } else {
-      toast('I couldn’t find a task in that. Try “Call mom tomorrow at 5pm”.', { tone: 'error' });
+
+      if (result.kind === 'tasks') {
+        setByAi(fromAi);
+        setDrafts(result.tasks);
+        setEditing(result.tasks.length === 1 ? 0 : null);
+        setStep('review');
+      } else if (result.kind === 'command') {
+        handleOutcome(await runCommand(result.command), value);
+      } else if (result.kind === 'habit') {
+        const { undo } = await addHabit({ title: result.habit.title, days: result.habit.days });
+        finish(`New habit: “${result.habit.title}” (${describeDays(result.habit.days).toLowerCase()}).`, undo);
+      } else if (result.kind === 'reply') {
+        setPending({ kind: 'reply', text: result.text });
+      } else {
+        toast('I couldn’t find a task in that. Try “Call mom tomorrow at 5pm”.', { tone: 'error' });
+      }
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -157,8 +184,14 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
                 {!speech.supported ? <MicOff size={20} /> : speech.listening ? <Square size={16} fill="currentColor" /> : <Mic size={20} />}
               </button>
               <span className="text-sm text-muted">{speech.listening ? 'Listening… tap to stop' : speech.supported ? 'Tap to speak' : 'Typing only in this browser'}</span>
-              <Button type="submit" variant="primary" className="ml-auto" disabled={!composed.trim() || busy}>
-                Add
+              <Button type="submit" variant="primary" className="ml-auto min-w-24" disabled={!composed.trim() || busy}>
+                {busy ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" /> {ai ? 'Thinking' : 'Adding'}
+                  </>
+                ) : (
+                  'Add'
+                )}
               </Button>
             </div>
           </form>
@@ -167,6 +200,13 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
             <p role="alert" className="rounded-2xl bg-card-coral p-3 text-sm font-semibold text-ink">
               {speech.error}
             </p>
+          )}
+
+          {pending?.kind === 'reply' && (
+            <div role="status" className="flex gap-3 rounded-2xl bg-card-lilac p-4 text-ink">
+              <Sparkles size={18} className="mt-0.5 shrink-0" />
+              <p className="font-semibold">{pending.text}</p>
+            </div>
           )}
 
           {pending?.kind === 'clarify' && (
@@ -229,12 +269,25 @@ export function AddSheet({ profile, now }: { profile: Profile; now: number }) {
                   </button>
                 ))}
               </div>
-              <p className="mt-3 text-xs text-muted">Add several things at once with commas. Start with “habit:” to build a habit.</p>
+              <p className="mt-3 flex items-center gap-1.5 text-xs text-muted">
+                {ai ? (
+                  <>
+                    <Sparkles size={13} /> Gemini is on: write or speak naturally, in any language.
+                  </>
+                ) : (
+                  'Add several things at once with commas. Start with “habit:” to build a habit.'
+                )}
+              </p>
             </div>
           )}
         </div>
       ) : (
         <div className="grid gap-3">
+          {byAi && (
+            <p className="flex items-center gap-2 text-sm font-semibold text-muted">
+              <Sparkles size={15} /> Understood by Gemini. Check the details, then add.
+            </p>
+          )}
           {drafts.map((task, i) =>
             editing === i ? (
               <div key={i} className="rounded-[24px] bg-surface-2 p-4 ring-fg/20 transition focus-within:ring-2">

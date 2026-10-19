@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ChevronDown, Flame, Lightbulb, Plus } from 'lucide-react';
+import { ChevronDown, Flame, Lightbulb, Loader2, Plus, Repeat, Sparkles } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { habitStreak, isScheduledOn, weekReport, type HistoryInput } from '../../supabase/functions/_shared/analytics.ts';
 import { addDays, dayBounds, hourLabel, localParts, shortDayLabel } from '../../supabase/functions/_shared/zone.ts';
@@ -9,6 +9,8 @@ import { HabitCheck } from '../features/habits/HabitCheck';
 import { HabitEditor } from '../features/habits/HabitEditor';
 import { ChartCard, minutesTick, PairedBars, PairedLines, SingleBars } from '../features/report/charts';
 import type { PlannerData } from '../hooks/useData';
+import { useAiAvailable, weeklyInsights } from '../lib/ai/assistant';
+import { AI_ERROR_TEXT, AiError } from '../../supabase/functions/_shared/gemini.ts';
 import { db } from '../lib/db/schema';
 import { describeDays } from '../lib/habits';
 import { dayKey, formatDuration } from '../lib/time/tz';
@@ -31,6 +33,16 @@ export default function ProgressPage({ data }: { data: PlannerData }) {
   const [week, setWeek] = useState<'this' | 'last'>('this');
   const [editing, setEditing] = useState<Habit | 'new' | null>(null);
   const [more, setMore] = useState(false);
+  const ai = useAiAvailable();
+  const [deeper, setDeeper] = useState<{ week: string; items: string[] } | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('dayflow-week-look') ?? 'null');
+    } catch {
+      return null;
+    }
+  });
+  const [deeperLoading, setDeeperLoading] = useState(false);
+  const [deeperError, setDeeperError] = useState<string | null>(null);
   const tz = profile.timezone;
   const today = dayKey(now, tz);
   const end = week === 'this' ? today : addDays(today, -7);
@@ -80,12 +92,51 @@ export default function ProgressPage({ data }: { data: PlannerData }) {
   const scoreRows = w.days.map((d) => ({ ...d, scoreValue: d.score ?? 0 }));
   const categoryRows = w.categories.slice(0, 7).map((c) => ({ ...c, label: c.category.charAt(0).toUpperCase() + c.category.slice(1) }));
 
+  const lookKey = `${w.start}:${w.end}`;
+  const askDeeper = async () => {
+    setDeeperLoading(true);
+    setDeeperError(null);
+    try {
+      const summary = [
+        `Week ${w.start} to ${w.end}. Average day score ${w.averageScore ?? 'n/a'}% (previous week ${w.previousAverageScore ?? 'n/a'}%).`,
+        `Tasks done ${w.completed} of ${w.planned}. Focus time ${w.focusMin} min (previous week ${w.previousFocusMin} min).`,
+        `Days: ${w.days.map((d) => `${d.label} ${d.score === null ? 'no plan' : `${d.score}% (${d.completed}/${d.planned})`}`).join(', ')}.`,
+        w.categories.length ? `Time by category: ${w.categories.map((c) => `${c.category} ${c.minutes} min`).join(', ')}.` : '',
+        report.estimates.length ? `Planned vs actual: ${report.estimates.map((e) => `${e.category} ${e.planned}→${e.actual} min`).join(', ')}.` : '',
+        w.habits.length ? `Habits: ${w.habits.map((h) => `${h.title} ${h.done}/${h.scheduled}`).join(', ')}.` : '',
+        w.mood !== null ? `Average mood ${w.mood.toFixed(1)}/5, energy ${w.energy?.toFixed(1)}/5.` : '',
+        `Best focus window ${Math.floor(profile.peakStart / 60)}:00–${Math.floor(profile.peakEnd / 60)}:00.`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+      const items = await weeklyInsights(summary);
+      const next = { week: lookKey, items };
+      setDeeper(next);
+      try {
+        localStorage.setItem('dayflow-week-look', JSON.stringify(next));
+      } catch {
+        /* fine */
+      }
+    } catch (err) {
+      setDeeperError(err instanceof AiError ? AI_ERROR_TEXT[err.code] : 'Couldn’t get a deeper look right now.');
+    } finally {
+      setDeeperLoading(false);
+    }
+  };
+  const look = deeper?.week === lookKey ? deeper.items : null;
+
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Bento tone="mist" className="rise p-6">
+    <div className="grid gap-5">
+      <header className="mb-1 lg:mb-3">
+        <p className="text-sm font-semibold text-muted">{week === 'this' ? 'Last 7 days' : 'The 7 days before'}</p>
+        <h1 className="mt-1 text-[32px] font-bold leading-none tracking-tight lg:text-[40px]">Progress</h1>
+      </header>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Bento tone="mist" className="rise relative overflow-hidden p-6 lg:p-8">
+          <div aria-hidden className="absolute -right-14 -top-14 h-48 w-48 rounded-full border-[26px] border-ink/[0.05]" />
           <Kicker>{week === 'this' ? 'This week' : 'Last week'}</Kicker>
-          <h1 className="mt-2 text-[32px] font-bold leading-[1.1] tracking-tight">Hello 👋 {words.title}</h1>
+          <h2 className="relative mt-2 text-[30px] font-bold leading-[1.1] tracking-tight lg:text-[34px]">Hello 👋 {words.title}</h2>
           <div className="mt-6 flex flex-wrap gap-2">
             <span className={pill}>Focus {w.focusMin ? formatDuration(w.focusMin) : '0m'}</span>
             {w.bestDay && <span className={pill}>Best: {w.bestDay.label.split(',')[0]} {w.bestDay.score}%</span>}
@@ -121,7 +172,8 @@ export default function ProgressPage({ data }: { data: PlannerData }) {
         </Bento>
       </div>
 
-      <section id="habits" aria-label="Habits" className="rounded-[28px] bg-surface p-5">
+      <div className="grid gap-5 lg:grid-cols-[1.25fr_1fr] lg:items-start">
+      <section id="habits" aria-label="Habits" className="rounded-[28px] bg-surface p-5 ring-1 ring-line">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold">Habits</h2>
           <button type="button" onClick={() => setEditing('new')} className="inline-flex items-center gap-1.5 rounded-full bg-fg px-4 py-2 text-sm font-bold text-app">
@@ -129,9 +181,12 @@ export default function ProgressPage({ data }: { data: PlannerData }) {
           </button>
         </div>
         {habits.length === 0 ? (
-          <p className="rounded-[20px] bg-surface-2 p-5 text-sm text-muted">
-            Small things you want to do regularly: reading, a walk, journaling. Tap “New habit” to start a streak.
-          </p>
+          <div className="flex items-center gap-4 rounded-[20px] bg-surface-2 p-5">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-card-lime text-ink">
+              <Repeat size={20} />
+            </span>
+            <p className="text-sm text-muted">Small things you want to do regularly, like reading or a walk. Build a streak one day at a time.</p>
+          </div>
         ) : (
           <ul className="grid gap-2">
             {habits.map((habit) => {
@@ -169,13 +224,40 @@ export default function ProgressPage({ data }: { data: PlannerData }) {
         )}
       </section>
 
-      <Bento tone="sky" className="flex gap-3">
-        <Lightbulb size={22} className="mt-0.5 shrink-0" />
-        <div>
-          <Kicker>Insight</Kicker>
-          <p className="mt-0.5 font-semibold">{w.insight}</p>
+      <Bento tone="sky" className="grid gap-4">
+        <div className="flex gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-white">
+            <Lightbulb size={18} />
+          </span>
+          <div>
+            <Kicker>Insight</Kicker>
+            <p className="mt-0.5 text-[17px] font-semibold leading-snug">{w.insight}</p>
+          </div>
         </div>
+        {ai &&
+          (look ? (
+            <ul className="grid gap-2">
+              {look.map((item, i) => (
+                <li key={i} className="flex gap-3 rounded-2xl bg-white/60 p-3 text-sm font-semibold">
+                  <Sparkles size={15} className="mt-0.5 shrink-0" /> {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div>
+              <button
+                type="button"
+                onClick={() => void askDeeper()}
+                disabled={deeperLoading}
+                className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-bold text-white disabled:opacity-70"
+              >
+                {deeperLoading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />} {deeperLoading ? 'Looking…' : 'Deeper look with Gemini'}
+              </button>
+              {deeperError && <p className="mt-2 text-sm font-semibold opacity-75">{deeperError}</p>}
+            </div>
+          ))}
       </Bento>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard

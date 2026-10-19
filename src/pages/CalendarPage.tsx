@@ -45,9 +45,9 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
 
   return (
     <div className="grid gap-5">
-      <header>
-        <p className="text-lg font-semibold text-muted">{monthLabel}</p>
-        <h1 className="text-3xl font-bold">Calendar</h1>
+      <header className="lg:mb-2">
+        <p className="text-sm font-semibold text-muted">{monthLabel}</p>
+        <h1 className="mt-1 text-[32px] font-bold leading-none tracking-tight lg:text-[40px]">Calendar</h1>
       </header>
 
       <div role="tablist" aria-label="Days" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
@@ -62,7 +62,7 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
               aria-label={`${formatDayLabel(d.start, tz, now)}, ${d.items.length} items`}
               onClick={() => setOffset(d.i)}
               className={`flex h-20 w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-[20px] transition ${
-                selected ? 'bg-ink text-white dark:bg-white dark:text-ink' : 'bg-surface text-fg hover:brightness-95'
+                selected ? 'bg-ink text-white shadow-lg dark:bg-white dark:text-ink' : 'bg-surface text-fg ring-1 ring-line hover:brightness-95'
               }`}
             >
               <span className="text-xs font-semibold opacity-70">{d.i === 0 ? 'Today' : weekday(d.start)}</span>
@@ -73,16 +73,16 @@ export default function CalendarPage({ data }: { data: PlannerData }) {
         })}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr] lg:items-start">
-        <section aria-label={formatDayLabel(day.start, tz, now)}>
-          <div className="mb-3 flex items-baseline justify-between">
+      <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-6">
+        <section aria-label={formatDayLabel(day.start, tz, now)} className="rounded-[28px] bg-surface p-4 ring-1 ring-line lg:p-5">
+          <div className="mb-3 flex items-baseline justify-between px-1">
             <h2 className="text-xl font-bold">{formatDayLabel(day.start, tz, now)}</h2>
             {day.minutes > 0 && <span className="text-sm font-semibold text-muted">{formatDuration(day.minutes)} planned</span>}
           </div>
           {day.items.length ? (
             <DayList items={day.items} tz={tz} now={now} />
           ) : (
-            <div className="rounded-[24px] border-2 border-dashed border-line p-8 text-center">
+            <div className="rounded-[20px] bg-surface-2/70 p-8 text-center">
               <p className="font-bold">A free day</p>
               <p className="mt-1 text-sm text-muted">Nothing planned yet.</p>
             </div>

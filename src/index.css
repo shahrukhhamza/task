@@ -59,6 +59,7 @@ html.dark {
 
 body {
   @apply bg-app font-sans text-fg antialiased;
+  isolation: isolate;
   margin: 0;
   overscroll-behavior-y: none;
 }

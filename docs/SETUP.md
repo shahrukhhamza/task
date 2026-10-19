@@ -14,10 +14,29 @@ values go.
 | Resend account | 3,000 emails/month, 100/day | nightly summary email |
 | VAPID key pair | generated locally | push reminders |
 | Vercel or Cloudflare Pages | free hobby tier | hosting the app |
+| Gemini API key (optional) | free tier, limits set by Google | the smart assistant |
 
 You'll need Node 20+ and this repo cloned. All commands run from the repo root.
 
 ---
+
+## 0. Smart assistant (Gemini), the quickest win
+
+This one needs no Supabase at all and takes about a minute:
+
+1. Open <https://aistudio.google.com/apikey> and sign in with your Google account.
+2. Click **Create API key** (free, no card). Copy it.
+3. In Dayflow: **Settings → Smart assistant**, paste the key, press **Connect**.
+
+Dayflow checks the key, picks the best free Gemini *Flash* model it can use, and switches on:
+understanding anything you type or say (any language, including Urdu and Roman Urdu),
+"Break it down" for big tasks, a short daily brief on Today, and a deeper weekly look on Progress.
+
+The key is stored on that device only and never synced, so repeat this on each device, or use
+the server option in step 6. Free-tier limits are set by Google and change from time to time; check
+yours at <https://aistudio.google.com/rate-limit>. When the limit is reached Dayflow falls back to
+its built-in parser automatically. Note that on the free tier Google may use prompts to improve its
+products.
 
 ## 1. Supabase project
 
@@ -109,7 +128,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"   # UNS
    npx supabase functions deploy google-calendar
    npx supabase functions deploy daily-summary --no-verify-jwt
    npx supabase functions deploy send-reminders --no-verify-jwt
+   npx supabase functions deploy ai            # only if you set GEMINI_API_KEY
    ```
+   With `GEMINI_API_KEY` set on the server, signed-in users get the smart assistant without
+   pasting their own key (they still switch it on in Settings → Smart assistant).
    (`--no-verify-jwt` is required: the scheduler and email unsubscribe links call those two
    without a user token; they check `CRON_SECRET` / a signed link instead.)
 

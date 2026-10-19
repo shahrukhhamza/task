@@ -11,7 +11,7 @@ export function TodayHabits({ habits, logs, today }: { habits: Habit[]; logs: Ha
   const done = new Set(logs.filter((l) => l.date === today).map((l) => l.habitId));
 
   return (
-    <section aria-label="Today’s habits" className="rounded-[28px] bg-surface p-4">
+    <section aria-label="Today’s habits" className="rounded-[28px] bg-surface p-4 ring-1 ring-line lg:p-5">
       <div className="mb-3 flex items-baseline justify-between px-1">
         <h2 className="font-bold">
           Habits <span className="text-muted">· {done.size}/{due.length}</span>

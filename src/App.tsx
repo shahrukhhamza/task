@@ -2,6 +2,7 @@ import { WifiOff } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { BottomNav } from './components/BottomNav';
+import { Backdrop, Sidebar } from './components/Sidebar';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toasts } from './components/Toasts';
 import { Skeleton } from './components/ui';
@@ -63,7 +64,14 @@ function Shell() {
         </div>
       )}
 
-      <main id="main" className="mx-auto w-full max-w-xl px-4 pb-36 pt-[max(1.25rem,env(safe-area-inset-top))] lg:max-w-5xl">
+      <Backdrop />
+      <Sidebar />
+
+      <main
+        id="main"
+        className="mx-auto w-full max-w-xl px-4 pb-36 pt-[max(1.25rem,env(safe-area-inset-top))] lg:max-w-none lg:pb-16 lg:pl-[18.5rem] lg:pr-10 lg:pt-10 xl:pr-14"
+      >
+        <div className="lg:mx-auto lg:max-w-6xl">
         <ErrorBoundary>
           <Suspense fallback={<Skeleton className="h-96" />}>
             <Routes>
@@ -79,6 +87,7 @@ function Shell() {
             </Routes>
           </Suspense>
         </ErrorBoundary>
+        </div>
       </main>
 
       <BottomNav />
