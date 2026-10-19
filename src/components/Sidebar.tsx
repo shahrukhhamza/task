@@ -38,12 +38,17 @@ export function Sidebar() {
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
-              `flex h-11 items-center gap-3 rounded-xl px-3.5 text-[15px] font-medium transition ${
-                isActive ? 'bg-surface-2 text-fg' : 'text-muted hover:bg-surface-2/70 hover:text-fg'
+              `relative flex h-11 items-center gap-3 rounded-xl px-3.5 text-[15px] transition ${
+                isActive ? 'bg-surface-2 font-semibold text-fg' : 'font-medium text-muted hover:bg-surface-2/70 hover:text-fg'
               }`
             }
           >
-            <Icon size={20} strokeWidth={2.2} aria-hidden /> {label}
+            {({ isActive }) => (
+              <>
+                {isActive && <span aria-hidden className="absolute -left-5 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-fg" />}
+                <Icon size={20} strokeWidth={2.2} aria-hidden /> {label}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>

@@ -281,16 +281,20 @@ export function SettingsPage({ data }: { data: PlannerData }) {
               type="button"
               aria-current={active ? 'page' : undefined}
               onClick={() => open(s.id)}
-              className={`flex w-full items-center gap-3 rounded-[20px] p-3 text-left transition ${active ? 'bg-surface shadow-sm ring-1 ring-line' : 'hover:bg-surface/70'}`}
+              className={`relative flex w-full items-center gap-3 rounded-[18px] p-3 text-left transition ${
+                active ? 'bg-surface-2 ring-1 ring-fg/10' : 'hover:bg-surface-2/60'
+              }`}
             >
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink ${s.tone}`}>
+              {/* the open section gets a bar on its left edge, like a bookmark */}
+              {active && <span aria-hidden className="absolute -left-3 top-1/2 h-8 w-1 -translate-y-1/2 rounded-full bg-fg" />}
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink ${s.tone} ${active ? 'ring-2 ring-fg' : ''}`}>
                 <Icon size={18} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block font-semibold">{s.title}</span>
+                <span className={`block ${active ? 'font-semibold text-fg' : 'font-medium text-fg/80'}`}>{s.title}</span>
                 <span className="block truncate text-xs font-medium text-muted">{s.desc}</span>
               </span>
-              <ChevronRight size={18} className="text-muted lg:hidden" />
+              <ChevronRight size={18} className={active ? 'text-fg' : 'text-muted lg:hidden'} />
             </button>
           </li>
         );
