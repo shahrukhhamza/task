@@ -81,7 +81,8 @@ Rules:
 - kind "fixed" when it happens at a set time (meeting, class, appointment, "gym at 6pm"); "deadline" when it must be done by a date or time (due, by, before, deadline); otherwise "flexible". A flexible task mentioned for a day ("call mom tomorrow") gets that date.
 - Resolve relative dates using the calendar given. Times are 24-hour HH:MM. Respect am/pm exactly: "8 AM to 9PM" is time 08:00 and endTime 21:00, "from 5 am to 6 am" is 05:00 to 06:00, "9 at night" is 21:00, 12 AM is 00:00 and 12 PM is 12:00. A bare hour from 1 to 6 without am/pm means the afternoon. A time already past today, with no date, means tomorrow.
 - A message like "add a meeting from 5 to 6" is one fixed task titled "Meeting", never "Add a meeting".
-- durationMin only when stated or obvious ("quick call" = 15). Never invent one.
+- For a fixed task, endTime is the end the user said ("6 pm to 6:30" is time 18:00, endTime 18:30), and durationMin the length they said ("for half an hour" is 30). Use exactly the length given: never round a short meeting up to an hour. Without any stated end or length, leave endTime and durationMin empty.
+- durationMin otherwise only when stated or obvious ("quick call" = 15). Never invent one.
 - priority "high" only for urgent/important wording, "low" for whenever/someday/no rush, otherwise "med".
 - repeat only for every/daily/weekly/each wording. addToCalendar only if they ask to put it in their calendar.
 - When the user says this, it, that or the last one about a task, use target "this" (the app knows which task they mean).

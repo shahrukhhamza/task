@@ -119,3 +119,57 @@ describe('guard against a model that gets am/pm wrong', () => {
     expect(applySpokenTimes([other], 'no times here', TZ)[0]).toBe(other);
   });
 });
+
+describe('short meetings keep the length you said', () => {
+  it.each([
+    ['meeting from 6 pm to 6:30', 30],
+    ['meeting from 6 pm to 6:30 pm', 30],
+    ['meeting from 6 to 6:30 pm', 30],
+    ['I have a meeting from 6 pm to 6:30', 30],
+    ['meeting 6pm-6:30pm', 30],
+    ['meeting from 6 pm to 6:15', 15],
+    ['meeting from 6 pm to 6:45', 45],
+    ['meeting at 6 pm for 30 minutes', 30],
+    ['meeting at 6pm', 60],
+  ])('rule parser: %s -> %d min', (input, minutes) => {
+    const t = one(input);
+    expect(t.fixedStart).toBe(at(10, 19, 18));
+    expect(t.durationMin).toBe(minutes);
+    expect(t.fixedEnd).toBe(at(10, 19, 18) + minutes * 60_000);
+  });
+
+  // a model that forgets the end time would otherwise fall back to a full hour
+  const forgetful = () => toParsedTask({ title: 'Meeting', kind: 'fixed', date: '2026-10-19', time: '18:00', priority: 'med', category: 'work' }, CTX)!;
+  it.each([
+    ['meeting from 6 pm to 6:30', 30],
+    ['I have a meeting from 6 PM to 6:30 PM', 30],
+    ['meeting from 6 p.m. to 6:30 p.m.', 30],
+    ['meeting from 6 to 6:30', 30],
+    ['meeting from 6 pm to 6.30 pm', 30],
+    ['meeting at 6 pm for half an hour', 30],
+    ['meeting at 6pm for 45 minutes', 45],
+  ])('guard fills in the length: %s -> %d min', (raw, minutes) => {
+    const [fixed] = applySpokenTimes([forgetful()], raw, TZ);
+    expect(fixed.fixedStart).toBe(at(10, 19, 18));
+    expect(fixed.fixedEnd).toBe(at(10, 19, 18) + minutes * 60_000);
+    expect(fixed.durationMin).toBe(minutes);
+  });
+
+  it('shrinks a model answer that rounded half an hour up to an hour', () => {
+    const rounded = toParsedTask({ title: 'Meeting', kind: 'fixed', date: '2026-10-19', time: '18:00', endTime: '19:00', priority: 'med', category: 'work' }, CTX)!;
+    expect(rounded.durationMin).toBe(60);
+    expect(applySpokenTimes([rounded], 'meeting from 6 pm to 6:30', TZ)[0].durationMin).toBe(30);
+  });
+
+  it('does not treat other number ranges as times', () => {
+    expect(spokenTimes('read pages 3 to 5')).toEqual([]);
+    expect(spokenTimes('meeting from 6 to 6:30')).toEqual([{ start: 360, end: 390, bare: true }]);
+    const t = forgetful();
+    expect(applySpokenTimes([t], 'read pages 6 to 8 later', TZ)[0]).toBe(t);
+  });
+
+  it('leaves an hour alone when nothing shorter was said', () => {
+    const t = forgetful();
+    expect(applySpokenTimes([t], 'meeting at 6 pm', TZ)[0]).toBe(t);
+  });
+});

@@ -2,15 +2,19 @@
 // returned: if the sentence says "9PM" the task must end at 21:00, whatever the model wrote.
 
 const MERIDIEM = '(a\\.?m\\.?|p\\.?m\\.?)';
-const TIME = `(\\d{1,2})(?::(\\d{2}))?\\s*${MERIDIEM}?`;
+const TIME = `(\\d{1,2})(?:[:.](\\d{2}))?\\s*${MERIDIEM}?`;
 const RANGE = new RegExp(`(?<![\\w:.])${TIME}\\s*(?:to|until|till|through|thru|-|–|—)\\s*${TIME}(?![\\w:])`, 'gi');
-const POINT = new RegExp(`(?<![\\w:.])(\\d{1,2})(?::(\\d{2}))?\\s*${MERIDIEM}(?![\\w])`, 'gi');
+const POINT = new RegExp(`(?<![\\w:.])(\\d{1,2})(?:[:.](\\d{2}))?\\s*${MERIDIEM}(?![\\w])`, 'gi');
+// "from 6 to 6:30": no am/pm anywhere, so the clock face is all we know
+const BARE_RANGE = /(?<![\w:.])(from\s+)?(\d{1,2})(?:[:.](\d{2}))?\s*(?:to|until|till|through|thru|-|–|—)\s*(\d{1,2})(?:[:.](\d{2}))?(?![\w:.])/gi;
 
 export interface SpokenTime {
   /** Minutes after midnight. */
   start: number;
   /** Set for ranges such as "8 AM to 9 PM". */
   end?: number;
+  /** True when the sentence gave no am/pm ("from 6 to 6:30"); the times are only a clock face, 0 to 719. */
+  bare?: boolean;
 }
 
 const isPm = (m: string): boolean => m.toLowerCase().startsWith('p');
@@ -68,7 +72,20 @@ export function spokenTimes(raw: string): SpokenTime[] {
     return ' '.repeat(all.length);
   });
 
-  for (const m of rest.matchAll(POINT)) {
+  const afterRanges = rest.replace(BARE_RANGE, (all, from: string | undefined, h1: string, m1: string | undefined, h2: string, m2: string | undefined) => {
+    const hour1 = parseInt(h1, 10);
+    const hour2 = parseInt(h2, 10);
+    // "pages 3 to 5" is not a time; a range needs "from" or minutes to read as one
+    if (!from && !m1 && !m2) return all;
+    if (hour1 < 1 || hour1 > 12 || hour2 < 1 || hour2 > 12) return all;
+    const min1 = m1 ? parseInt(m1, 10) : 0;
+    const min2 = m2 ? parseInt(m2, 10) : 0;
+    if (min1 > 59 || min2 > 59) return all;
+    found.push({ start: (hour1 % 12) * 60 + min1, end: (hour2 % 12) * 60 + min2, bare: true });
+    return ' '.repeat(all.length);
+  });
+
+  for (const m of afterRanges.matchAll(POINT)) {
     const start = toMinutes(parseInt(m[1], 10), m[2] ? parseInt(m[2], 10) : 0, isPm(m[3]));
     if (start !== undefined) found.push({ start });
   }
